@@ -1,0 +1,186 @@
+{
+  "variant": "baseline-linux-ci",
+  "measured_at": "2026-09-28T00:24:33.364180+00:00",
+  "method": "local icp-cli update wall time; includes CLI and local replica overhead",
+  "wasm_sha256": "191c1c47e1fcbad26ae35d0414fc21780dc51fded5239e6b12ac4eb571ff4f97",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "corpus_sha256": "aa75a7c811ab4a5698dcb6d8fc9d65440889bf0a98d3ff59bf6f8ae279b3370f",
+  "repeats": 3,
+  "warmups": 1,
+  "cases": [
+    {
+      "id": "choice-natural-00",
+      "tokens": 44,
+      "samples": [
+        {
+          "rep": 0,
+          "wall_seconds": 1.8667280839999876,
+          "instructions": 13112429229,
+          "logits": [
+            1.7130183,
+            -2.230556,
+            0.44230524
+          ],
+          "update_calls": 1
+        },
+        {
+          "rep": 1,
+          "wall_seconds": 1.8105363340000622,
+          "instructions": 13112529216,
+          "logits": [
+            1.7130183,
+            -2.230556,
+            0.44230524
+          ],
+          "update_calls": 1
+        },
+        {
+          "rep": 2,
+          "wall_seconds": 1.656424541999968,
+          "instructions": 13112469229,
+          "logits": [
+            1.7130183,
+            -2.230556,
+            0.44230524
+          ],
+          "update_calls": 1
+        }
+      ],
+      "median_wall_seconds": 1.8105363340000622,
+      "median_instructions": 13112469229,
+      "min_wall_seconds": 1.656424541999968,
+      "max_wall_seconds": 1.8667280839999876
+    },
+    {
+      "id": "choice-boundary-64",
+      "tokens": 64,
+      "samples": [
+        {
+          "rep": 0,
+          "wall_seconds": 2.315162040999894,
+          "instructions": 18605451324,
+          "logits": [
+            1.193822,
+            -2.239922,
+            0.5372669
+          ],
+          "update_calls": 1
+        },
+        {
+          "rep": 1,
+          "wall_seconds": 2.3226984999996603,
+          "instructions": 18605536065,
+          "logits": [
+            1.193822,
+            -2.239922,
+            0.5372669
+          ],
+          "update_calls": 1
+        },
+        {
+          "rep": 2,
+          "wall_seconds": 2.348069249999753,
+          "instructions": 18605516065,
+          "logits": [
+            1.193822,
+            -2.239922,
+            0.5372669
+          ],
+          "update_calls": 1
+        }
+      ],
+      "median_wall_seconds": 2.3226984999996603,
+      "median_instructions": 18605516065,
+      "min_wall_seconds": 2.315162040999894,
+      "max_wall_seconds": 2.348069249999753
+    },
+    {
+      "id": "choice-boundary-96",
+      "tokens": 96,
+      "samples": [
+        {
+          "rep": 0,
+          "wall_seconds": 3.449132707999979,
+          "instructions": 28800646064,
+          "logits": [
+            1.0181341,
+            -1.4883227,
+            0.88033146
+          ],
+          "update_calls": 1
+        },
+        {
+          "rep": 1,
+          "wall_seconds": 3.438022791000094,
+          "instructions": 28800771722,
+          "logits": [
+            1.0181341,
+            -1.4883227,
+            0.88033146
+          ],
+          "update_calls": 1
+        },
+        {
+          "rep": 2,
+          "wall_seconds": 3.424626250000074,
+          "instructions": 28800771722,
+          "logits": [
+            1.0181341,
+            -1.4883227,
+            0.88033146
+          ],
+          "update_calls": 1
+        }
+      ],
+      "median_wall_seconds": 3.438022791000094,
+      "median_instructions": 28800771722,
+      "min_wall_seconds": 3.424626250000074,
+      "max_wall_seconds": 3.449132707999979
+    },
+    {
+      "id": "choice-boundary-128",
+      "tokens": 128,
+      "samples": [
+        {
+          "rep": 0,
+          "wall_seconds": 4.793501082999683,
+          "instructions": 39278562195,
+          "logits": [
+            0.99742746,
+            -1.5374423,
+            0.32783198
+          ],
+          "update_calls": 2
+        },
+        {
+          "rep": 1,
+          "wall_seconds": 4.819171417000234,
+          "instructions": 39278402208,
+          "logits": [
+            0.99742746,
+            -1.5374423,
+            0.32783198
+          ],
+          "update_calls": 2
+        },
+        {
+          "rep": 2,
+          "wall_seconds": 4.846961958000065,
+          "instructions": 39278282195,
+          "logits": [
+            0.99742746,
+            -1.5374423,
+            0.32783198
+          ],
+          "update_calls": 2
+        }
+      ],
+      "median_wall_seconds": 4.819171417000234,
+      "median_instructions": 39278402208,
+      "min_wall_seconds": 4.793501082999683,
+      "max_wall_seconds": 4.846961958000065
+    }
+  ],
+  "host": "macOS-27.0-arm64-arm-64bit",
+  "machine": "arm64"
+}

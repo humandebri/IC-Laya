@@ -1,5 +1,13 @@
 name: tests-and-builds
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      benchmark_int8:
+        description: Measure PR #1 Wasm candidates on x86 Linux
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -50,3 +58,48 @@ jobs:
           path: |
             build/
             Cargo.lock
+  int8-linux-benchmark:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.benchmark_int8 }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: candid-and-wasm
+          run-id: 36143269078
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ runner.temp }}/baseline
+      - uses: actions/download-artifact@v4
+        with:
+          name: candid-and-wasm
+          run-id: 36193370976
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: ${{ runner.temp }}/candidate
+      - name: Install pinned PocketIC server and Python client
+        run: |
+          python -m pip install pocket-ic==3.1.2 ic-py==1.0.1 psutil==6.1.1
+          curl -fsSL https://github.com/dfinity/pocketic/releases/download/15.0.0/pocket-ic-x86_64-linux.gz -o "$RUNNER_TEMP/pocket-ic.gz"
+          echo '972d592975bdd0f046b05b5414ed6f9a044c676ef912b8ac81d359dd4982b038  '"$RUNNER_TEMP/pocket-ic.gz" | sha256sum --check
+          gzip -dc "$RUNNER_TEMP/pocket-ic.gz" > "$RUNNER_TEMP/pocket-ic"
+          chmod +x "$RUNNER_TEMP/pocket-ic"
+          echo "POCKET_IC_BIN=$RUNNER_TEMP/pocket-ic" >> "$GITHUB_ENV"
+      - name: Verify Wasm hashes and benchmark
+        run: |
+          echo '191c1c47e1fcbad26ae35d0414fc21780dc51fded5239e6b12ac4eb571ff4f97  '"$RUNNER_TEMP/baseline/build/decision-engine.wasm" | sha256sum --check
+          echo '5dd29878ccaae08b501f8ccc410335dbc30a809787789232914707f31a1c5f3c  '"$RUNNER_TEMP/candidate/build/decision-engine.wasm" | sha256sum --check
+          python tools/benchmark_int8_candidates.py \
+            --variant "baseline=$RUNNER_TEMP/baseline/build/decision-engine.wasm" \
+            --variant "unroll8=$RUNNER_TEMP/candidate/build/decision-engine.wasm" \
+            --repeats 5 --warmups 1 \
+            --output artifacts/int8_kernel_generator/linux-x86-ci-wasm.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: int8-linux-benchmark
+          path: artifacts/int8_kernel_generator/linux-x86-ci-wasm.json

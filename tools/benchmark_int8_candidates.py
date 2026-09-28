@@ -31,15 +31,28 @@ def server_cpu():
     try:
         import psutil
         port_file = f'{tempfile.gettempdir()}/pocket_ic_{os.getpid()}.port'
-        for proc in psutil.process_iter(['cmdline']):
+        configured_server = os.environ.get('POCKET_IC_BIN')
+        server_path = os.path.realpath(configured_server) if configured_server else None
+        fallback = []
+        for proc in psutil.process_iter(['cmdline', 'exe']):
             try:
                 cmdline = proc.info['cmdline'] or []
-                if port_file in cmdline and any('pocket-ic' in part for part in cmdline[:1]):
+                executable = proc.info['exe'] or ''
+                if any(port_file in part for part in cmdline):
                     sample = proc.cpu_times()
                     return sample.user + sample.system
+                if server_path and os.path.realpath(executable) == server_path:
+                    fallback.append(proc)
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
+        # Dedicated CI runners have only one PocketIC server. Its command line
+        # does not always expose the Python client's port-file path.
+        if len(fallback) == 1:
+            sample = fallback[0].cpu_times()
+            return sample.user + sample.system
     except (ImportError, PermissionError):
+        pass
+    except (psutil.NoSuchProcess, psutil.AccessDenied):
         pass
     return None
 

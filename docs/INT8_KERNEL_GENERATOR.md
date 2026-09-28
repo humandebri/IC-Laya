@@ -1,6 +1,6 @@
 # INT8行列積の命令数削減: カーネル生成と実モデル測定
 
-2026-09-25。W8A8の整数積を行う`dot_tile`の16バイトKループを生成器に移し、展開数を1・2・3・4・8・16で比較した。採用は**８回展開**。16回展開は命令数がさらに減ったが、Linux CIのWasmビルドが完了できなかったため比較候補に留める。ICの計上方式、モデルpack、量子化、積和順序、出力APIは変更していない。目的は現行の命令上限内で扱える入力長を伸ばすことであり、ノードCPU負荷については次段階で判断する。
+2026-09-25。W8A8の整数積を行う`dot_tile`の16バイトKループを生成器に移し、展開数を1・2・3・4・8・16で比較した。命令数では**８回展開**がCIビルド可能な最良候補だった。16回展開は命令数がさらに減ったが、Linux CIのWasmビルドが完了できなかったため比較候補に留める。ICの計上方式、モデルpack、量子化、積和順序、出力APIは変更していない。2026-09-28の実モデル遅延測定では８回展開に大きな遅延が見つかったため、採用判断は保留する。
 
 ## 実モデルでの結果
 
@@ -8,7 +8,7 @@
 
 | Wasm | 96入力の命令数削減率・中央値 | 最小～最大 | logits最大絶対差 | 判定不一致 |
 |---|---:|---:|---:|---:|
-| **8回展開（採用）** | **5.613%** | **5.184～5.704%** | **0.0** | **0/96** |
+| **8回展開（候補）** | **5.613%** | **5.184～5.704%** | **0.0** | **0/96** |
 | 16回展開（CIビルド不可） | 6.304% | 6.136～6.658% | 0.0 | 0/96 |
 
 128-token Choice境界入力では、変更前**39,283,922,912**命令から採用した８回展開で**37,179,745,325**命令（5.357%減）。16回展開では36,820,406,517命令（6.271%減）だった。これでもqueryの5B命令上限には届かない。実モデルの生値は[変更前](../artifacts/int8_kernel_generator/real-original.json)、[8回展開](../artifacts/int8_kernel_generator/real-unroll8.json)、[16回展開](../artifacts/int8_kernel_generator/real-unroll16.json)。module SHA-256は順に`0298b36221d5676f7721640b56f15ad7bd7cb81b765fba1f9c88333494007030`、`a0fb59f29325aede13626148f3725196c1c58b53dcc2b164aac5e941c82bab35`、`b83b5d023d0027cb39704fbba3625a94ab7f2b52de12b30046b64810a4342d7e`。pack SHA-256はすべて`bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092`。
@@ -26,9 +26,24 @@ PocketIC v15.0.0のowner専用`benchmark_int8_kernel`を使い、各候補を別
 
 [全サンプル](../artifacts/int8_kernel_generator/pocketic-original-unroll16.json)には各呼び出しの命令数、checksum、壁時計時間、Wasm hashを保存した。８回展開は同じ３つの128-token形状で6.54～6.86%減だった（[全サンプル](../artifacts/int8_kernel_generator/pocketic-unroll2-4-8.json)）。入力i8をタイルごとにi16へ事前拡張して再利用する試行は、128-tokenの３形状で**0.20～1.59%増**となり撤回した（[全サンプル](../artifacts/int8_kernel_generator/pocketic-preexpanded-input.json)）。
 
-16回展開のWasmは7,352,703 bytes、gzip時1,867,382 bytes。Mac arm64でのreleaseビルドには3分18秒かかり、`rustc`の観測RSSは約8.2GBだった。８回展開のWasmは6,516,334 bytes。CIのLinux runnerでは16回展開のWasmビルドが約88秒後に終了コード143で停止した（GitHub Actions run 36191742651）。Rustコンパイルエラーは記録されていないが、同じジョブで他のWasmはビルドできており、16回展開のコンパイル資源消費が原因と考えられる。８回展開を選び、CI結果を確認する。
+16回展開のWasmは7,352,703 bytes、gzip時1,867,382 bytes。Mac arm64でのreleaseビルドには3分18秒かかり、`rustc`の観測RSSは約8.2GBだった。８回展開のWasmは6,516,334 bytes。CIのLinux runnerでは16回展開のWasmビルドが約88秒後に終了コード143で停止した（GitHub Actions run 36191742651）。Rustコンパイルエラーは記録されていないが、同じジョブで他のWasmはビルドできており、16回展開のコンパイル資源消費が原因と考えられる。
 
-この計測のPocketIC更新呼び出しの壁時計時間は、16回展開で元より長かった。８回展開も実ノードCPU負荷の改善は未検証である。たとえば128×3072×1024は約0.028→0.042秒。これはMac上の短い合成処理の値で、実ICノードのCPU負荷を表す測定ではない。命令数優先の候補として扱い、CPU時間と同時実行時のノード負荷は採用前にx86 Linuxで測る。
+この計測のPocketIC更新呼び出しの壁時計時間は、16回展開で元より長かった。８回展開も128×3072×1024の合成処理で約0.028→0.042秒に増えた。これはMac上の短い合成処理の値で、実ICノードのCPU負荷を表す測定ではない。
+
+## 実モデルの所要時間（2026-09-28、Mac arm64）
+
+GitHub Actionsの変更前Wasm (`191c1c47…`) と８回展開Wasm (`5dd29878…`) を、同じlocal canisterへ順にinstall・upgradeした。同じ403MiB packを一度uploadし、各Wasmで201 tensorをwarmupした。各入力は準備1回と測定3回を行い、壁時計時間の中央値を比較した。計測には`icp` CLI起動とlocal replica通信の時間も含む。128 tokensは２回のupdateへ分割し、それ以外は単一updateを使った。
+
+| 入力 | 変更前 | ８回展開 | 所要時間の増加 | 命令数の削減 |
+|---|---:|---:|---:|---:|
+| Choice自然文・44 tokens | 1.811秒 | 1.819秒 | 0.5% | 5.678% |
+| Choice境界・64 tokens | 2.323秒 | 3.039秒 | 30.9% | 5.688% |
+| Choice境界・96 tokens | 3.438秒 | 4.389秒 | 27.7% | 5.424% |
+| Choice境界・128 tokens | 4.819秒 | 6.420秒 | 33.2% | 5.365% |
+
+４入力ともlogitsは完全一致した。生の反復値・Wasm SHA-256・pack SHA-256・corpus SHA-256は[変更前](../artifacts/int8_kernel_generator/full-wall-baseline-linux-ci.json)と[８回展開](../artifacts/int8_kernel_generator/full-wall-unroll8-linux-ci.json)に保存した。再実行には`tools/benchmark_full_model_wall.py --variant NAME --network-root ROOT --expected-wasm WASM --output RESULT.json`を使用する。入力を増やす場合は`--case-id`を繰り返す。
+
+この環境では64 tokens以上の実推論が大幅に遅くなり、当初の「検証入力で1%以上の性能悪化がない」採用条件を満たさない。**このPRは現時点でマージしない。** x86 LinuxでのCPU時間と同時実行時のノード負荷は未測定であり、採用判断には別途測定が必要である。
 
 ## 再生成と再測定
 
