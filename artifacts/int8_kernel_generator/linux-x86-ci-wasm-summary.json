@@ -1,0 +1,167 @@
+{
+  "host": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "pocket_ic_bin": "/home/runner/work/_temp/pocket-ic",
+  "method": "isolated PocketIC, owner-only benchmark_int8_kernel, deterministic synthetic tensors",
+  "variants": {
+    "baseline": {
+      "sha256": "191c1c47e1fcbad26ae35d0414fc21780dc51fded5239e6b12ac4eb571ff4f97",
+      "bytes": 5894809
+    },
+    "unroll8": {
+      "sha256": "5dd29878ccaae08b501f8ccc410335dbc30a809787789232914707f31a1c5f3c",
+      "bytes": 6517987
+    }
+  },
+  "source_run": "https://github.com/humandebri/IC-Laya-Standalone/actions/runs/36363353651",
+  "full_artifact_name": "int8-linux-benchmark",
+  "full_artifact_sha256": "f170b97dfb2c3a0be052c19499089aa2452dfeb93a8101626c07d7656ddfbc3e",
+  "repeats": 100,
+  "warmups": 1,
+  "summary": [
+    {
+      "shape": [
+        28,
+        3072,
+        1024
+      ],
+      "variant": "baseline",
+      "median_instructions": 64613368,
+      "instruction_reduction_percent": 0.0,
+      "median_wall_s": 0.024559276499999783,
+      "median_server_cpu_s": 0.010000000000000009,
+      "total_server_cpu_s": 0.8999999999999991,
+      "samples": 100,
+      "wall_range_s": [
+        0.021012646999999163,
+        0.032087169000000415
+      ]
+    },
+    {
+      "shape": [
+        28,
+        3072,
+        1024
+      ],
+      "variant": "unroll8",
+      "median_instructions": 60515128,
+      "instruction_reduction_percent": 6.34271223874292,
+      "median_wall_s": 0.027091903999998834,
+      "median_server_cpu_s": 0.010000000000000009,
+      "total_server_cpu_s": 1.0500000000000007,
+      "samples": 100,
+      "wall_range_s": [
+        0.023515906999996616,
+        0.03274350200000242
+      ]
+    },
+    {
+      "shape": [
+        128,
+        3072,
+        1024
+      ],
+      "variant": "baseline",
+      "median_instructions": 273074560,
+      "instruction_reduction_percent": 0.0,
+      "median_wall_s": 0.048798515499999695,
+      "median_server_cpu_s": 0.010000000000000231,
+      "total_server_cpu_s": 1.220000000000002,
+      "samples": 100,
+      "wall_range_s": [
+        0.04231374900000162,
+        0.07618399800000475
+      ]
+    },
+    {
+      "shape": [
+        128,
+        3072,
+        1024
+      ],
+      "variant": "unroll8",
+      "median_instructions": 254399488,
+      "instruction_reduction_percent": 6.838817940418906,
+      "median_wall_s": 0.051007024999996986,
+      "median_server_cpu_s": 0.009999999999999787,
+      "total_server_cpu_s": 1.1099999999999985,
+      "samples": 100,
+      "wall_range_s": [
+        0.04377125700000306,
+        0.056156762999997056
+      ]
+    },
+    {
+      "shape": [
+        128,
+        5248,
+        1024
+      ],
+      "variant": "baseline",
+      "median_instructions": 462824963,
+      "instruction_reduction_percent": 0.0,
+      "median_wall_s": 0.07571611299999859,
+      "median_server_cpu_s": 0.010000000000000675,
+      "total_server_cpu_s": 1.420000000000008,
+      "samples": 100,
+      "wall_range_s": [
+        0.06501199699999916,
+        0.0820179960000047
+      ]
+    },
+    {
+      "shape": [
+        128,
+        5248,
+        1024
+      ],
+      "variant": "unroll8",
+      "median_instructions": 430921715,
+      "instruction_reduction_percent": 6.893156272025502,
+      "median_wall_s": 0.07969164500000403,
+      "median_server_cpu_s": 0.009999999999999787,
+      "total_server_cpu_s": 1.4099999999999921,
+      "samples": 100,
+      "wall_range_s": [
+        0.06937843000000044,
+        0.2278883519999937
+      ]
+    },
+    {
+      "shape": [
+        128,
+        1024,
+        2624
+      ],
+      "variant": "baseline",
+      "median_instructions": 229276739,
+      "instruction_reduction_percent": 0.0,
+      "median_wall_s": 0.042593177500002355,
+      "median_server_cpu_s": 0.010000000000000231,
+      "total_server_cpu_s": 1.28000000000001,
+      "samples": 100,
+      "wall_range_s": [
+        0.03649165800000276,
+        0.07444509900000185
+      ]
+    },
+    {
+      "shape": [
+        128,
+        1024,
+        2624
+      ],
+      "variant": "unroll8",
+      "median_instructions": 214192835,
+      "instruction_reduction_percent": 6.578907233631526,
+      "median_wall_s": 0.045376512000004254,
+      "median_server_cpu_s": 0.009999999999999787,
+      "total_server_cpu_s": 1.3599999999999897,
+      "samples": 100,
+      "wall_range_s": [
+        0.03723286700000017,
+        0.09893842799999675
+      ]
+    }
+  ]
+}

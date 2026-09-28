@@ -1,6 +1,6 @@
 # INT8行列積の命令数削減: カーネル生成と実モデル測定
 
-2026-09-25。W8A8の整数積を行う`dot_tile`の16バイトKループを生成器に移し、展開数を1・2・3・4・8・16で比較した。命令数では**８回展開**がCIビルド可能な最良候補だった。16回展開は命令数がさらに減ったが、Linux CIのWasmビルドが完了できなかったため比較候補に留める。ICの計上方式、モデルpack、量子化、積和順序、出力APIは変更していない。2026-09-28の実モデル遅延測定では８回展開に大きな遅延が見つかったため、採用判断は保留する。
+2026-09-25～28。W8A8の整数積を行う`dot_tile`の16バイトKループを生成器に移し、展開数を1・2・3・4・8・16で比較した。命令数では**８回展開**がCIビルド可能な最良候補だった。16回展開はLinux CIのWasmビルドが完了しなかった。８回展開もMacの実モデル推論とLinux x86の合成ベンチで遅くなり、**通常推論への採用を撤回した**。現行コードは元の整数積を使用する。ICの計上方式、モデルpack、量子化、積和順序、出力APIは変更していない。
 
 ## 実モデルでの結果
 
@@ -43,16 +43,30 @@ GitHub Actionsの変更前Wasm (`191c1c47…`) と８回展開Wasm (`5dd29878…
 
 ４入力ともlogitsは完全一致した。生の反復値・Wasm SHA-256・pack SHA-256・corpus SHA-256は[変更前](../artifacts/int8_kernel_generator/full-wall-baseline-linux-ci.json)と[８回展開](../artifacts/int8_kernel_generator/full-wall-unroll8-linux-ci.json)に保存した。再実行には`tools/benchmark_full_model_wall.py --variant NAME --network-root ROOT --expected-wasm WASM --output RESULT.json`を使用する。入力を増やす場合は`--case-id`を繰り返す。
 
-この環境では64 tokens以上の実推論が大幅に遅くなり、当初の「検証入力で1%以上の性能悪化がない」採用条件を満たさない。**このPRは現時点でマージしない。** x86 LinuxでのCPU時間と同時実行時のノード負荷は未測定であり、採用判断には別途測定が必要である。
+この環境では64 tokens以上の実推論が大幅に遅くなり、当初の「検証入力で1%以上の性能悪化がない」採用条件を満たさない。
+
+## Linux x86の合成ベンチ（2026-09-28）
+
+GitHub Actionsの`ubuntu-latest`でPocketIC v15.0.0を使い、同じ２つのCI生成Wasmを別canisterにinstallした。各形状につき準備１回、測定100回を交互に実行した。checksumは全回一致した。
+
+| tokens × 出力行 × K | 変更前のupdate中央値 | ８回展開 | 所要時間の増加 | 命令数の削減 |
+|---|---:|---:|---:|---:|
+| 28 × 3072 × 1024 | 24.56ms | 27.09ms | 10.31% | 6.343% |
+| 128 × 3072 × 1024 | 48.80ms | 51.01ms | 4.53% | 6.839% |
+| 128 × 5248 × 1024 | 75.72ms | 79.69ms | 5.25% | 6.893% |
+| 128 × 1024 × 2624 | 42.59ms | 45.38ms | 6.53% | 6.579% |
+
+[集計JSON](../artifacts/int8_kernel_generator/linux-x86-ci-wasm-summary.json)にWasm hash、中央値、範囲、PocketIC serverのCPU時間を保存した。全800サンプルはGitHub Actions [run 36363353651](https://github.com/humandebri/IC-Laya-Standalone/actions/runs/36363353651)の`int8-linux-benchmark` artifactにある。CPU時間は個別呼び出しに対して約10ms粒度で量子化され、形状間で増減が混在するため、この結果からCPU負荷の改善・悪化は断定しない。同時実行時のノード負荷も未測定である。
+
+Macでの実モデル遅延とLinux x86での合成update遅延がともに悪化したため、当初の採用条件に従って８回展開を撤回した。元のkernelを通常推論に戻し、生成器、候補Wasmの測定結果、再測定ツールだけを保存する。
 
 ## 再生成と再測定
 
-`tools/generate_int8_dot.py`が`crates/laya-candle/src/int8_dot_generated.rs`を決定的に生成する。通常ビルドはチェックイン済みファイルを使い、生成処理をcanister実行時に行わない。`int8.rs`は従来のRust ABIとタイル選択を維持する。
+`tools/generate_int8_dot.py`が`crates/laya-candle/src/int8_dot_generated.rs`を決定的に生成する。生成ファイルは比較候補の記録で、通常ビルドには含めない。比較候補を再ビルドする場合は、候補が組み込まれていたcommit `b30414f`を使う。現行の`int8.rs`は元のSIMD kernelを使用する。
 
 ```sh
 python3 tools/generate_int8_dot.py --check
 python3 tools/generate_int8_dot.py --unroll 16  # 比較候補を生成するとき
-IC_LAYA_CANDLE=1 tools/build_one.sh decision-engine
 ```
 
 PocketIC比較は`python3 tools/benchmark_int8_candidates.py --variant baseline=BASELINE.wasm --variant candidate=CANDIDATE.wasm --output result.json`。必要なPython packagesは`pocket-ic==3.1.2`、`ic-py==1.0.1`、任意で`psutil`。`POCKET_IC_BIN`にはPocketIC実行ファイルを指定する。実モデル比較には独立localネットワークに同じpackをupload/warmupし、`tools/compare_int8_model_candidates.py --network-root ROOT --expected-wasm WASM --variant NAME --output result.json [--baseline baseline.json]`を使う。計測の詳細は各JSONのmodule hash・pack hash・corpus hashで照合する。

@@ -229,7 +229,105 @@ fn dot_tile<const R: usize, const C: usize>(a: &[i8], b: &[i8], cols: usize) -> 
     }
     result
 }
-include!("int8_dot_generated.rs");
+#[cfg(target_arch = "wasm32")]
+#[allow(unsafe_code)]
+// K<=16384 bounds every signed i8 dot below 16384*128*128 < i32::MAX.
+fn dot_tile<const R: usize, const C: usize>(a: &[i8], b: &[i8], cols: usize) -> [[i32; C]; R] {
+    assert!(R <= 64 && C <= 16 && cols <= 16384 && a.len() == R * cols && b.len() == C * cols);
+    use std::arch::wasm32::*;
+    #[target_feature(enable = "simd128")]
+    unsafe fn kernel<const R: usize, const C: usize>(
+        a: &[i8],
+        b: &[i8],
+        cols: usize,
+    ) -> [[i32; C]; R] {
+        let mut acc = [[i32x4_splat(0); C]; R];
+        let end = cols / 16 * 16;
+        let mut k = 0;
+        while k + 16 < end {
+            {
+                let offset = k;
+            let mut lo = [i32x4_splat(0); C];
+            let mut hi = [i32x4_splat(0); C];
+            macro_rules! weights {($($c:literal),*)=>{$(if C>$c{
+                // Each full chunk is within the wrapper-checked C rows.
+                let w=unsafe{v128_load(b.as_ptr().add($c*cols+offset).cast())};
+                lo[$c]=i16x8_extend_low_i8x16(w);hi[$c]=i16x8_extend_high_i8x16(w);
+            })*};}
+            weights!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+            macro_rules! columns {($r:literal,$xl:ident,$xh:ident;$($c:literal),*)=>{$(if C>$c{
+                acc[$r][$c]=i32x4_add(acc[$r][$c],i32x4_add(i32x4_dot_i16x8($xl,lo[$c]),i32x4_dot_i16x8($xh,hi[$c])));
+            })*};}
+            macro_rules! rows {($($r:literal),*)=>{$(if R>$r{
+                // Each full chunk is within the wrapper-checked R rows.
+                let x=unsafe{v128_load(a.as_ptr().add($r*cols+offset).cast())};
+                let xl=i16x8_extend_low_i8x16(x);let xh=i16x8_extend_high_i8x16(x);
+                columns!($r,xl,xh;0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+            })*};}
+            rows!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63);
+            }
+            {
+                let offset = k + 16;
+            let mut lo = [i32x4_splat(0); C];
+            let mut hi = [i32x4_splat(0); C];
+            macro_rules! weights {($($c:literal),*)=>{$(if C>$c{
+                // Each full chunk is within the wrapper-checked C rows.
+                let w=unsafe{v128_load(b.as_ptr().add($c*cols+offset).cast())};
+                lo[$c]=i16x8_extend_low_i8x16(w);hi[$c]=i16x8_extend_high_i8x16(w);
+            })*};}
+            weights!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+            macro_rules! columns {($r:literal,$xl:ident,$xh:ident;$($c:literal),*)=>{$(if C>$c{
+                acc[$r][$c]=i32x4_add(acc[$r][$c],i32x4_add(i32x4_dot_i16x8($xl,lo[$c]),i32x4_dot_i16x8($xh,hi[$c])));
+            })*};}
+            macro_rules! rows {($($r:literal),*)=>{$(if R>$r{
+                // Each full chunk is within the wrapper-checked R rows.
+                let x=unsafe{v128_load(a.as_ptr().add($r*cols+offset).cast())};
+                let xl=i16x8_extend_low_i8x16(x);let xh=i16x8_extend_high_i8x16(x);
+                columns!($r,xl,xh;0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+            })*};}
+            rows!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63);
+            }
+            k += 32;
+        }
+        if k < end {
+            let offset = k;
+            let mut lo = [i32x4_splat(0); C];
+            let mut hi = [i32x4_splat(0); C];
+            macro_rules! weights {($($c:literal),*)=>{$(if C>$c{
+                // Each full chunk is within the wrapper-checked C rows.
+                let w=unsafe{v128_load(b.as_ptr().add($c*cols+offset).cast())};
+                lo[$c]=i16x8_extend_low_i8x16(w);hi[$c]=i16x8_extend_high_i8x16(w);
+            })*};}
+            weights!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+            macro_rules! columns {($r:literal,$xl:ident,$xh:ident;$($c:literal),*)=>{$(if C>$c{
+                acc[$r][$c]=i32x4_add(acc[$r][$c],i32x4_add(i32x4_dot_i16x8($xl,lo[$c]),i32x4_dot_i16x8($xh,hi[$c])));
+            })*};}
+            macro_rules! rows {($($r:literal),*)=>{$(if R>$r{
+                // Each full chunk is within the wrapper-checked R rows.
+                let x=unsafe{v128_load(a.as_ptr().add($r*cols+offset).cast())};
+                let xl=i16x8_extend_low_i8x16(x);let xh=i16x8_extend_high_i8x16(x);
+                columns!($r,xl,xh;0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);
+            })*};}
+            rows!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63);
+        }
+        let mut result = [[0; C]; R];
+        macro_rules! store_cols {($r:literal;$($c:literal),*)=>{$(if C>$c{
+            let v=acc[$r][$c];result[$r][$c]=i32x4_extract_lane::<0>(v)+i32x4_extract_lane::<1>(v)+i32x4_extract_lane::<2>(v)+i32x4_extract_lane::<3>(v);
+        })*};}
+        macro_rules! store_rows {($($r:literal),*)=>{$(if R>$r{store_cols!($r;0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15);})*};}
+        store_rows!(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63);
+        for i in 0..R {
+            for j in 0..C {
+                for k in end..cols {
+                    result[i][j] += a[i * cols + k] as i32 * b[j * cols + k] as i32;
+                }
+            }
+        }
+        result
+    }
+    // Shapes and accumulator bounds checked above; IC supports simd128.
+    unsafe { kernel::<R, C>(a, b, cols) }
+}
 /// Synthetic profiling helper used by the owner-only bounded canister benchmark.
 pub fn benchmark(
     tokens: usize,
