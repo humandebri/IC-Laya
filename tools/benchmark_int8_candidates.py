@@ -135,6 +135,8 @@ def main():
                 'median_wall_s': statistics.median(r['update_wall_s'] for r in part),
                 'median_server_cpu_s': (statistics.median(r['server_cpu_s'] for r in part)
                                         if all(r['server_cpu_s'] is not None for r in part) else None),
+                'total_server_cpu_s': (sum(r['server_cpu_s'] for r in part)
+                                       if all(r['server_cpu_s'] is not None for r in part) else None),
             })
         a.output.write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report['summary'], indent=2), flush=True)

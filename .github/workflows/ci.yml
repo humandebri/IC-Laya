@@ -96,7 +96,7 @@ jobs:
           python tools/benchmark_int8_candidates.py \
             --variant "baseline=$RUNNER_TEMP/baseline/build/decision-engine.wasm" \
             --variant "unroll8=$RUNNER_TEMP/candidate/build/decision-engine.wasm" \
-            --repeats 5 --warmups 1 \
+            --repeats 100 --warmups 1 \
             --output artifacts/int8_kernel_generator/linux-x86-ci-wasm.json
       - uses: actions/upload-artifact@v4
         if: always()
