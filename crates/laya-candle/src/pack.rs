@@ -1,4 +1,4 @@
-//! Canonical F32/int8 packs. Reads one tensor at a time; never mmaps.
+//! Canonical INT8 packs (F32 vectors and row scales). Reads one tensor at a time; never mmaps.
 use crate::{expected_tensors,LayaModel,ModelConfig,Weight,int8::Int8Matrix};
 use candle_core::{Device,DType,Tensor};
 use ic_laya_core::{hash,BackendKind,Digest,Error,Result};
@@ -21,7 +21,7 @@ impl Manifest {
         let m:Self=serde_json::from_slice(raw).map_err(|e|Error::Invalid(e.to_string()))?;m.validate()?;Ok(m)
     }
     pub fn validate(&self)->Result<()> {
-        if !["ic-laya-f32-pack-v1","ic-laya-int8-pack-v1"].contains(&self.format.as_str()) || self.source_repo.is_empty() || self.source_revision.is_empty() || self.total_bytes==0 || self.total_bytes>2*1024*1024*1024 {return Err(Error::Invalid("pack metadata".into()));}
+        if self.format!="ic-laya-int8-pack-v1" || self.source_repo.is_empty() || self.source_revision.is_empty() || self.total_bytes==0 || self.total_bytes>2*1024*1024*1024 {return Err(Error::Invalid("pack metadata".into()));}
         if !self.test_only && (self.source_revision.len()!=40 || !self.source_revision.bytes().all(|x|x.is_ascii_hexdigit())){return Err(Error::Invalid("a real pack requires an immutable source commit".into()));}
         let mut q=self.primitive_to_qtype;q.sort();if q!=[0,1,2]{return Err(Error::Invalid("qtype map".into()));}
         let expected=expected_tensors(&self.config)?;if expected.len()!=self.tensors.len(){return Err(Error::Invalid("tensor count".into()));}
@@ -30,7 +30,10 @@ impl Manifest {
             if !names.insert(e.name.clone()) || expected.get(&e.name)!=Some(&e.shape) || e.offset!=pos {return Err(Error::Invalid("tensor name/shape/offset".into()));}
             let count=e.shape.iter().try_fold(1u64,|a,&b|a.checked_mul(b as u64).ok_or(Error::TooLong))?;
             let len=match e.storage {
-                Storage::F32=>count.checked_mul(4).ok_or(Error::TooLong)?,
+                Storage::F32=>{
+                    if e.shape.len()!=1{return Err(Error::Invalid("expected INT8 matrix storage".into()));}
+                    count.checked_mul(4).ok_or(Error::TooLong)?
+                },
                 Storage::I8Row=>{
                     if self.format!="ic-laya-int8-pack-v1" || e.shape.len()!=2 || e.shape[1]>16384{return Err(Error::Invalid("int8 storage/shape".into()));}
                     count.checked_add(e.shape[0] as u64*4).ok_or(Error::TooLong)?

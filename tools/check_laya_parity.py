@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare local upstream Laya F32, canonical F32, and W8A8 on identical tokens.
+"""Compare local upstream Laya F32 and runtime W8A8 on identical tokens.
 
 Requires a reviewed local upstream common.py, a local HF checkpoint snapshot,
 transformers, and a release laya-infer binary. No remote code is executed.
@@ -12,6 +12,7 @@ import importlib.metadata
 from datetime import datetime, timezone
 import importlib.util
 import json
+import math
 from pathlib import Path
 import subprocess
 import torch
@@ -23,11 +24,14 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--source", type=Path, required=True)
     p.add_argument("--upstream", type=Path, required=True)
-    p.add_argument("--f32", type=Path, required=True)
+    p.add_argument("--max-abs-error", type=float, default=0.15,
+                   help="INT8 versus upstream F32 limit for this fixed sample (default: 0.15)")
     p.add_argument("--int8", type=Path, required=True)
     p.add_argument("--binary", type=Path, default=Path("target/release/laya-infer"))
     p.add_argument("--output", type=Path, required=True)
     args = p.parse_args()
+    if not math.isfinite(args.max_abs_error) or args.max_abs_error < 0:
+        p.error("--max-abs-error must be finite and nonnegative")
     spec = importlib.util.spec_from_file_location("laya_common", args.upstream)
     common = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(common)
@@ -67,24 +71,25 @@ def main():
     del model, encoder
     gc.collect()
     for case in cases:
-        for label, pack in [("f32", args.f32), ("int8", args.int8)]:
+        for label, pack in [("int8", args.int8)]:
             result = subprocess.run([str(args.binary), str(pack), case["input"]], check=True, capture_output=True, text=True)
             values = json.loads(result.stdout)["raw_logits"]
+            if len(values) != len(case["upstream"]) or not values or not all(math.isfinite(v) for v in values + case["upstream"]):
+                raise SystemExit("Invalid logit shape or nonfinite values")
             case[label] = values
             case[label + "_max_abs_error"] = max(abs(a-b) for a,b in zip(case["upstream"], values))
             case[label + "_argmax_matches"] = max(range(len(values)), key=values.__getitem__) == max(range(len(values)), key=case["upstream"].__getitem__)
         print(json.dumps(case), flush=True)
-    report = {"cases": cases, "quality_benchmark": False,
+    report = {"cases": cases, "quality_benchmark": False, "max_abs_error_limit": args.max_abs_error,
               "measured_at": datetime.now(timezone.utc).isoformat(),
               "source_repo": "convaiinnovations/laya-typed-decisions",
-              "source_revision": json.loads((args.f32 / "manifest.json").read_text())["source_revision"],
+              "source_revision": json.loads((args.int8 / "manifest.json").read_text())["source_revision"],
               "upstream_common_sha256": hashlib.sha256(args.upstream.read_bytes()).hexdigest(),
               "packages": {name: importlib.metadata.version(name) for name in ["torch", "transformers", "safetensors", "numpy"]},
-              "f32_bundle_sha256": hashlib.sha256((args.f32 / "manifest.json").read_bytes()).hexdigest(),
               "int8_bundle_sha256": hashlib.sha256((args.int8 / "manifest.json").read_bytes()).hexdigest()}
     args.output.write_text(json.dumps(report, indent=2)+"\n")
-    if any(c["f32_max_abs_error"] > 0.002 for c in cases):
-        raise SystemExit("F32 upstream parity failed")
+    if any(c["int8_max_abs_error"] > args.max_abs_error or not c["int8_argmax_matches"] for c in cases):
+        raise SystemExit("INT8 upstream parity failed")
 
 
 if __name__ == "__main__":

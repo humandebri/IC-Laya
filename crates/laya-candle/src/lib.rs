@@ -1,4 +1,4 @@
-//! Batch-one ModernBERT + option-marker head, with F32 and W8A8 weights.
+//! Batch-one ModernBERT + option-marker head, with W8A8 matrix weights and F32 vectors.
 //! Sampled upstream parity is recorded in artifacts/laya_int8_parity.json.
 //! Sampled numerical parity does not establish decision quality or calibration.
 #![deny(unsafe_code)]
@@ -37,21 +37,18 @@ impl ModelConfig {
         for v in [self.global_rope_theta,self.local_rope_theta]{if !v.is_finite() || v<=1.0 || v>1e12{return Err(Error::Numeric);}}Ok(())
     }
 }
+/// Runtime storage: F32 is restricted to one-dimensional bias/norm vectors.
 #[derive(Clone)]
 pub enum Weight { F32(Tensor), Int8(int8::Int8Matrix) }
 impl Weight {
     fn dims(&self)->Vec<usize>{match self{Self::F32(t)=>t.dims().to_vec(),Self::Int8(t)=>t.dims().to_vec()}}
-    fn gather(&self,ids:&[u32])->CResult<Tensor>{match self{
-        Self::F32(t)=>t.index_select(&Tensor::from_vec(ids.to_vec(),ids.len(),t.device())?,0),
-        Self::Int8(t)=>t.gather(ids),
-    }}
 }
 #[derive(Clone)]
-pub struct Linear { weight:Weight,bias:Option<Tensor> }
+pub struct Linear { weight:int8::Int8Matrix,bias:Option<Tensor> }
 impl Linear {
-    pub fn new(weight:Tensor,bias:Option<Tensor>)->Self{Self{weight:Weight::F32(weight),bias}}
-    pub fn forward(&self,x:&Tensor)->CResult<Tensor>{let y=match &self.weight{Weight::F32(w)=>x.matmul(&w.t()?.contiguous()?)?,Weight::Int8(w)=>w.forward(x)?};match &self.bias{Some(b)=>y.broadcast_add(b),None=>Ok(y)}}
+    pub fn forward(&self,x:&Tensor)->CResult<Tensor>{let y=self.weight.forward(x)?;match &self.bias{Some(b)=>y.broadcast_add(b),None=>Ok(y)}}
 }
+
 #[derive(Clone)]
 pub struct Norm { weight:Tensor,bias:Option<Tensor>,eps:f64 }
 impl Norm {
@@ -209,21 +206,19 @@ impl InferenceSession { pub fn completed_steps(&self)->usize{self.next} }
 
 pub struct LayaModel {
     pub config:ModelConfig,pub bundle:Digest,pub backend_kind:BackendKind,
-    embedding:Weight,embedding_norm:Norm,layers:Vec<EncoderLayer>,final_norm:Norm,qtype:Weight,
+    embedding:int8::Int8Matrix,embedding_norm:Norm,layers:Vec<EncoderLayer>,final_norm:Norm,qtype:int8::Int8Matrix,
     decision:Vec<DecisionLayer>,scorer_norm:Norm,scorer_dense:Linear,scorer_out:Linear,
 }
 fn weight(m:&BTreeMap<String,Weight>,name:&str)->Result<Weight>{m.get(name).cloned().ok_or_else(||Error::Invalid(format!("missing tensor: {name}")))}
 fn tensor(m:&BTreeMap<String,Weight>,name:&str)->Result<Tensor>{match weight(m,name)?{Weight::F32(t)=>Ok(t),Weight::Int8(_)=>Err(Error::Invalid(format!("expected F32: {name}")))}}
-fn linear(m:&BTreeMap<String,Weight>,p:&str,bias:bool)->Result<Linear>{Ok(Linear{weight:weight(m,&format!("{p}.weight"))?,bias:if bias{Some(tensor(m,&format!("{p}.bias"))?)}else{None}})}
+fn matrix(m:&BTreeMap<String,Weight>,name:&str)->Result<int8::Int8Matrix>{match weight(m,name)?{Weight::Int8(t)=>Ok(t),Weight::F32(_)=>Err(Error::Invalid(format!("expected INT8 matrix: {name}")))}}
+fn linear(m:&BTreeMap<String,Weight>,p:&str,bias:bool)->Result<Linear>{Ok(Linear{weight:matrix(m,&format!("{p}.weight"))?,bias:if bias{Some(tensor(m,&format!("{p}.bias"))?)}else{None}})}
 fn norm(m:&BTreeMap<String,Weight>,p:&str,bias:bool,eps:f64)->Result<Norm>{Ok(Norm{weight:tensor(m,&format!("{p}.weight"))?,bias:if bias{Some(tensor(m,&format!("{p}.bias"))?)}else{None},eps})}
 impl LayaModel {
-    pub fn from_tensors(c:ModelConfig,bundle:Digest,kind:BackendKind,m:BTreeMap<String,Tensor>)->Result<Self>{
-        Self::from_weights(c,bundle,kind,m.into_iter().map(|(n,t)|(n,Weight::F32(t))).collect())
-    }
     pub fn from_weights(c:ModelConfig,bundle:Digest,kind:BackendKind,m:BTreeMap<String,Weight>)->Result<Self>{
         let expected=expected_tensors(&c)?;
         if expected.len()!=m.len(){return Err(Error::Invalid("unexpected tensor set".into()));}
-        for (name,shape) in &expected {let t=m.get(name).ok_or_else(||Error::Invalid(format!("missing {name}")))?;if t.dims()!=*shape || matches!(t,Weight::F32(v) if v.dtype()!=DType::F32){return Err(Error::Invalid(format!("shape/dtype: {name}")));}}
+        for (name,shape) in &expected {let t=m.get(name).ok_or_else(||Error::Invalid(format!("missing {name}")))?;if t.dims()!=*shape || matches!(t,Weight::F32(v) if v.dtype()!=DType::F32 || shape.len()!=1){return Err(Error::Invalid(format!("shape/dtype: {name}")));}}
         let mut layers=Vec::new();
         for i in 0..c.layers {let p=format!("encoder.{i}");let local=i%c.global_every!=0;
             layers.push(EncoderLayer{attention_norm:if i>0||c.first_layer_attention_norm{Some(norm(&m,&format!("{p}.attn_norm"),false,c.norm_eps)?)}else{None},
@@ -233,7 +228,7 @@ impl LayaModel {
         let mut decision=Vec::new();
         for i in 0..c.decision_layers {let p=format!("decision.{i}");decision.push(DecisionLayer{norm1:norm(&m,&format!("{p}.norm1"),true,c.decision_norm_eps)?,norm2:norm(&m,&format!("{p}.norm2"),true,c.decision_norm_eps)?,
             attention:Attention{qkv:linear(&m,&format!("{p}.qkv"),true)?,out:linear(&m,&format!("{p}.out"),true)?,heads:c.decision_heads},linear1:linear(&m,&format!("{p}.linear1"),true)?,linear2:linear(&m,&format!("{p}.linear2"),true)?,norm_first:c.decision_norm_first,activation:c.decision_activation});}
-        Ok(Self{embedding:weight(&m,"embeddings.weight")?,embedding_norm:norm(&m,"embeddings.norm",false,c.norm_eps)?,final_norm:norm(&m,"final_norm",false,c.norm_eps)?,qtype:weight(&m,"qtype.weight")?,
+        Ok(Self{embedding:matrix(&m,"embeddings.weight")?,embedding_norm:norm(&m,"embeddings.norm",false,c.norm_eps)?,final_norm:norm(&m,"final_norm",false,c.norm_eps)?,qtype:matrix(&m,"qtype.weight")?,
             scorer_norm:norm(&m,"scorer.norm",true,c.scorer_norm_eps)?,scorer_dense:linear(&m,"scorer.dense",true)?,scorer_out:linear(&m,"scorer.out",true)?,config:c,bundle,backend_kind:kind,layers,decision})
     }
     fn validate_input(&self,input:&TokenInput)->Result<()>{
@@ -365,7 +360,7 @@ mod optimized_tests {
 
     #[test]
     fn final_decision_marker_rows_match_full_layer() {
-        for folder in ["tiny-prenorm", "tiny-postnorm", "tiny-int8-prenorm", "tiny-int8-postnorm"] {
+        for folder in ["tiny-int8-prenorm", "tiny-int8-postnorm"] {
             let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures").join(folder);
             let model = pack::load_directory(&dir).unwrap();
             let cases: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join("cases.json")).unwrap()).unwrap();
@@ -381,28 +376,6 @@ mod optimized_tests {
                 let selected = last.forward_markers(&hidden, &markers).unwrap().to_vec2::<f32>().unwrap();
                 assert_eq!(selected, full, "{folder}");
             }
-        }
-    }
-}
-
-/// Shared ModernBERT encoder surface.
-///
-/// `verdict-candle` (the openJev/GLiClass backend) reuses this instead of a
-/// second encoder implementation, so both backends run identical encoder
-/// kernels and differ only in their heads.
-pub mod encoder {
-    use super::{CResult,EncoderLayer,Norm,Tensor};
-    /// ModernBERT = token embeddings + pre-norm layers + final norm.
-    pub struct ModernBert { pub embedding:Tensor,pub embedding_norm:Norm,pub layers:Vec<EncoderLayer>,pub final_norm:Norm }
-    impl ModernBert {
-        pub fn new(embedding:Tensor,embedding_norm:Norm,layers:Vec<EncoderLayer>,final_norm:Norm)->Self{
-            Self{embedding,embedding_norm,layers,final_norm}
-        }
-        /// `input_ids` is a 1-D token id tensor; the result is `[tokens, hidden]`.
-        pub fn forward(&self,input_ids:&Tensor)->CResult<Tensor>{
-            let mut x=self.embedding_norm.forward(&self.embedding.index_select(input_ids,0)?)?;
-            for layer in &self.layers{x=layer.forward(&x)?;}
-            self.final_norm.forward(&x)
         }
     }
 }

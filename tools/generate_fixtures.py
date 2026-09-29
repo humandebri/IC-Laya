@@ -5,7 +5,7 @@ Default behaviour (no `--tier`) writes exactly the two tiny fixtures and the
 numeric vectors that the test suite depends on. Output for those paths must stay
 byte-identical; `MANIFEST.sha256` and `tests/test_reference.py` pin them.
 
-`--tier` additionally writes sized synthetic packs under `fixtures/<tier>/` for
+`--tier` additionally writes sized synthetic INT8 packs under `fixtures/<tier>/` for
 performance measurement. Those are random weights of the same architecture at a
 larger scale, NOT Laya, and they say nothing about decision quality; they exist
 so `tools/measure_inference.py` can measure instruction cost through the real
@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import tempfile
 from pathlib import Path
 import numpy as np
 import torch
@@ -203,7 +204,15 @@ def generate_tier(name: str) -> dict:
     weights = build_weights(cfg, seed=hash(name) % (2 ** 31))
     tokenizer_raw = build_tokenizer(cfg["vocab_size"])
     directory = ROOT / "fixtures" / name
-    total = write_pack(directory, cfg, weights, tokenizer_raw, f"tier-{name}")
+    # Runtime packs are INT8; the F32 export exists only during conversion.
+    from quantize_pack import quantize
+    if directory.exists():
+        raise ValueError(f"output already exists: {directory}")
+    with tempfile.TemporaryDirectory(prefix="laya-tier-") as tmp:
+        source = Path(tmp) / "f32"
+        write_pack(source, cfg, weights, tokenizer_raw, f"tier-{name}")
+        manifest = quantize(source, directory)
+    total = manifest["total_bytes"]
     cases = measurement_cases(cfg, weights)
     (directory / "input.json").write_text(json.dumps(cases[0]["input"], indent=2) + "\n")
     for index, case in enumerate(cases):
