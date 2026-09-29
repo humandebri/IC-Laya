@@ -4,7 +4,7 @@
 
 Initial experimental source release:
 
-- Independent Rust implementation of Laya option-logit inference with F32 and W8A8 INT8 model packs.
+- Independent Rust implementation of Laya option-logit inference with W8A8 INT8 model packs. F32 export and inference are retained for conversion and numerical reference.
 - Owner-only local canister inference with direct updates, resumable updates, and a measured 16-token raw query path for a fixed pack.
 - Model conversion, benchmark tools, numerical reference tests, and recorded local measurements.
 - English setup and contribution guides, private security reporting, and issue/PR templates.

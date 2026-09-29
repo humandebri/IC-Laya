@@ -1,12 +1,12 @@
 # IC-Laya
 
-IC-Laya is an independent Rust and Internet Computer (ICP) canister implementation of Laya's typed decisions: Choice, Noul, and Score. It includes F32 and W8A8 INT8 inference, a tokenizer adapter, canisters, a mock workflow, and verification tools.
+IC-Laya is an independent Rust and Internet Computer (ICP) canister implementation of Laya's typed decisions: Choice, Noul, and Score. It runs W8A8 INT8 inference and includes a tokenizer adapter, canisters, a mock workflow, and verification tools.
 
 **Pretrained weights are not included.** The small models in `fixtures/` contain random test weights. They do not demonstrate language understanding or decision accuracy. To run the real model, provide a checkpoint and tokenizer whose licenses permit your intended use.
 
 ## What it does
 
-- Convert a Laya checkpoint into a model pack and run inference in native Rust or a local IC canister.
+- Convert a Laya checkpoint into an INT8 model pack and run inference in native Rust or a local IC canister.
 - Run owner-only raw inference by update for inputs up to 128 tokens, including the schema prefix. A measured input completed in one update; a resumable path is also available.
 - Run an owner-only raw query for up to 16 tokens with the measured Wasm and INT8 pack. Inputs of 17 or more tokens, and other packs, are rejected before inference.
 - Exercise typed results and workflows locally with a mock ledger.
@@ -21,7 +21,7 @@ The Rust version is pinned in [`rust-toolchain.toml`](rust-toolchain.toml). Pyth
 cargo test --workspace --locked
 cargo check -p decision-engine --features candle --locked
 cargo run --locked -p laya-candle --bin laya-infer -- \
-  fixtures/tiny-prenorm fixtures/tiny-prenorm/input.json
+  fixtures/tiny-int8-prenorm fixtures/tiny-int8-prenorm/input.json
 ```
 
 The last command checks the inference path with random test weights; it does not measure decision quality. Run the Python reference tests with:
@@ -53,12 +53,14 @@ Outputs go to `build/`; these commands do not deploy a canister. Follow the Engl
 
 These results come from limited inputs in a local environment. They do not guarantee that every 128-token input fits in one update or establish accuracy, calibration, or safety for real tasks. Security or financial decisions require evaluation on the intended use case and human review. The query API returns raw logits, not an authenticated Receipt or a certified response.
 
+F32 model packs and the F32 inference path are retained for checkpoint conversion and numerical comparisons. The documented deployment path uses INT8. W8A8 still uses F32 scales and floating-point operations such as normalization and softmax.
+
 ## Repository layout
 
 | Path | Contents |
 | --- | --- |
 | `crates/ic-laya-core/` | Types, schemas, math, and workflows |
-| `crates/laya-candle/` | F32 and INT8 inference and model pack loading |
+| `crates/laya-candle/` | INT8 inference, model pack loading, and numerical reference code |
 | `crates/hf-tokenizer/` | Tokenizer adapter |
 | `canisters/` | Decision engine, executor, and mock ledger |
 | `tools/` | Pack conversion, builds, local runs, and benchmarks |

@@ -1,6 +1,6 @@
-# Run Laya locally
+# Run INT8 Laya locally
 
-This guide takes a fixed Laya checkpoint through F32 export, INT8 conversion, and inference in a local Internet Computer canister. Run commands from the repository root. No pretrained weights are distributed with IC-Laya.
+This guide runs a fixed Laya checkpoint with W8A8 INT8 inference in a local Internet Computer canister. F32 export is an intermediate conversion step. Run commands from the repository root. No pretrained weights are distributed with IC-Laya.
 
 ## Prerequisites
 
@@ -20,7 +20,7 @@ For a small test without a pretrained checkpoint:
 
 ```bash
 cargo run --locked -p laya-candle --bin laya-infer -- \
-  fixtures/tiny-prenorm fixtures/tiny-prenorm/input.json
+  fixtures/tiny-int8-prenorm fixtures/tiny-int8-prenorm/input.json
 ```
 
 The output identifies the backend as `SyntheticFixture`. These random weights test the inference path, not language understanding.
