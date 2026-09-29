@@ -1,6 +1,6 @@
 # Run INT8 Laya locally
 
-This guide runs a fixed Laya checkpoint with W8A8 INT8 inference in a local Internet Computer canister. F32 export is an intermediate conversion step. Run commands from the repository root. No pretrained weights are distributed with IC-Laya.
+This guide runs a fixed Laya checkpoint with W8A8 INT8 inference in a local Internet Computer canister. F32 export is an intermediate conversion step and cannot be loaded by the runtime. Run commands from the repository root. No pretrained weights are distributed with IC-Laya.
 
 ## Prerequisites
 

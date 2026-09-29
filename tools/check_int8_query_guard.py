@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Verify the measured 16-token query allowance and 17+ rejection on local IC."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -16,7 +17,11 @@ def args_for(inp):
 
 
 def main():
-    icp = Icp(ROOT, 'local', 'ic-laya-int8')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--identity', default='ic-laya-int8')
+    parser.add_argument('--output', type=Path, default=ROOT / 'artifacts/int8_optimization_v4/query-guard-check.json')
+    args = parser.parse_args()
+    icp = Icp(ROOT, 'local', args.identity)
     require_local_network(icp)
     if network_status(icp) is None:
         raise RuntimeError('local network is stopped')
@@ -67,7 +72,8 @@ def main():
               'rows': rows, 'update_17_succeeds': len(update_17['logits']) > 0,
               'query_128_rejected': True,
               'max_query_instructions': max(x['instructions'] for x in rows if x['status'] == 'ok')}
-    output = ROOT / 'artifacts/int8_optimization_v4/query-guard-check.json'
+    output = args.output
+    output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, indent=2) + '\n')
 
 

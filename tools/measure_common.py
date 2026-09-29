@@ -133,6 +133,8 @@ def upload_pack(icp, tier: str, chunk_kib: int, timeout: int) -> tuple[dict, byt
     model_raw = (directory / "model.bin").read_bytes()
     tokenizer_raw = (directory / "tokenizer.json").read_bytes()
     manifest = json.loads(manifest_raw)
+    if manifest["format"] != "ic-laya-int8-pack-v1":
+        raise RuntimeError("Runtime requires INT8; convert this legacy fixture with tools/quantize_pack.py")
     record: dict = {"tier": tier, "pack_bytes": len(model_raw),
                     "tensors": len(manifest["tensors"]), "config": manifest["config"]}
 

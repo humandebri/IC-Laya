@@ -18,7 +18,7 @@ For current English setup instructions, see [Run Laya locally](GETTING_STARTED.m
 - `ic-laya-int8-pack-v1`。2次元重みは対称int8、出力行ごとのF32 scale。
   各tensorは `[row-major i8 bytes][rows個のlittle-endian F32 scale]`。
   `storage: I8Row`、length、offset、SHA-256をmanifestに記録する。
-  バイアスとLayerNormの1次元weightはF32。旧F32 packも読み込める。
+  Biases and LayerNorm vectors remain F32. The runtime accepts INT8 packs only; F32 packs are conversion intermediates.
 - 線形層は入力トークンごとに動的量子化し、int8×int8→int32で積和するW8A8。
   出力はF32に戻し、LayerNorm・RoPE・softmax・attention積・活性化を実行する。
 - embedding/qtypeは参照行だけ復元。全重みのF32展開はしない。
@@ -98,9 +98,11 @@ cargo build --release -p laya-candle --bin laya-infer
 .venv/bin/python tools/check_laya_parity.py \
   --source checkpoints/laya-source \
   --upstream .cache/upstream/src/laya-main/laya/common.py \
-  --f32 checkpoints/laya-f32 --int8 checkpoints/laya-int8 \
+  --int8 checkpoints/laya-int8 \
   --output artifacts/laya_int8_parity.json
 ```
+
+The comparison tool now runs INT8 against upstream F32 only. It requires matching argmax and a maximum absolute logit error of 0.15 on this fixed sample (override with `--max-abs-error`). This is a sample-specific regression threshold, not a quality guarantee. Historical canonical F32 results remain in the dated artifact.
 
 `choice-128`は計測用に反復した文章を上流のmax_len=128で構築した入力。
 アプリ側の入力を黙って切り詰める変更はしていない。

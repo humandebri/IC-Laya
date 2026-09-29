@@ -2,8 +2,8 @@ use ic_laya_core::{engine::InferenceBackend,TokenInput,BackendKind,Error};
 use std::path::PathBuf;
 fn dir(name:&str)->PathBuf{PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures").join(name)}
 #[test]
-fn synthetic_pytorch_logits_match_candle(){
-    for folder in ["tiny-prenorm","tiny-postnorm"]{
+fn int8_logits_match_independent_pytorch_reference(){
+    for folder in ["tiny-int8-prenorm","tiny-int8-postnorm"]{
         let d=dir(folder);let mut model=laya_candle::pack::load_directory(&d).unwrap();
         assert_eq!(model.kind(),BackendKind::SyntheticFixture);
         let cases:serde_json::Value=serde_json::from_slice(&std::fs::read(d.join("cases.json")).unwrap()).unwrap();
@@ -11,27 +11,27 @@ fn synthetic_pytorch_logits_match_candle(){
             let input:TokenInput=serde_json::from_value(case["input"].clone()).unwrap();
             let expected:Vec<f32>=serde_json::from_value(case["expected_logits"].clone()).unwrap();
             let output=model.infer(&input).unwrap();assert_eq!(expected.len(),output.len());
-            for (a,b) in output.iter().zip(expected.iter()) {assert!((a-b).abs()<=1e-3+1e-3*b.abs(),"{folder}: {a} versus {b}");}
+            for (a,b) in output.iter().zip(expected.iter()) {assert!((a-b).abs()<=0.002,"{folder}: {a} versus {b}");}
         }
     }
 }
 #[test]
 fn corrupted_tensor_rejected(){
-    let d=dir("tiny-prenorm");let raw=std::fs::read(d.join("manifest.json")).unwrap();let mut builder=laya_candle::pack::Builder::new(&raw).unwrap();
+    let d=dir("tiny-int8-prenorm");let raw=std::fs::read(d.join("manifest.json")).unwrap();let mut builder=laya_candle::pack::Builder::new(&raw).unwrap();
     let e=builder.next_entry().unwrap().clone();let all=std::fs::read(d.join("model.bin")).unwrap();
     let mut bytes=all[e.offset as usize..(e.offset+e.length) as usize].to_vec();bytes[0]^=1;assert!(builder.push(&bytes).is_err());
 }
 #[test]
-fn rejects_missing_option_markers(){let mut model=laya_candle::pack::load_directory(&dir("tiny-prenorm")).unwrap();let bad=TokenInput{input_ids:vec![1,5,6,2],markers:vec![1,2],qtype_id:0};assert!(model.infer(&bad).is_err());}
+fn rejects_missing_option_markers(){let mut model=laya_candle::pack::load_directory(&dir("tiny-int8-prenorm")).unwrap();let bad=TokenInput{input_ids:vec![1,5,6,2],markers:vec![1,2],qtype_id:0};assert!(model.infer(&bad).is_err());}
 #[test]
-fn rejects_unknown_qtype(){let mut model=laya_candle::pack::load_directory(&dir("tiny-prenorm")).unwrap();let bad=TokenInput{input_ids:vec![1,3,3,2],markers:vec![1,2],qtype_id:3};assert!(matches!(model.infer(&bad),Err(Error::Invalid(_))));}
+fn rejects_unknown_qtype(){let mut model=laya_candle::pack::load_directory(&dir("tiny-int8-prenorm")).unwrap();let bad=TokenInput{input_ids:vec![1,3,3,2],markers:vec![1,2],qtype_id:3};assert!(matches!(model.infer(&bad),Err(Error::Invalid(_))));}
 
 #[test]
 fn profiled_inference_matches_plain_inference(){
     // The profiler must be observation-only: identical logits, and the phase
     // costs must account for the whole call.
     use std::cell::Cell;
-    for folder in ["tiny-prenorm","tiny-postnorm"]{
+    for folder in ["tiny-int8-prenorm","tiny-int8-postnorm"]{
         let d=dir(folder);
         let mut plain=laya_candle::pack::load_directory(&d).unwrap();
         let mut profiled=laya_candle::pack::load_directory(&d).unwrap();
@@ -51,25 +51,6 @@ fn profiled_inference_matches_plain_inference(){
             let total:u64=phases.iter().map(|p|p.instructions).sum();
             assert_eq!(total,60,"{folder}: phases must sum to the measured span");
             assert!(phases.iter().all(|p|p.instructions>0),"{folder}: every phase must consume instructions");
-        }
-    }
-}
-
-#[test]
-fn int8_pack_tracks_f32_for_all_fixture_cases() {
-    for suffix in ["prenorm", "postnorm"] {
-        let d = dir(&format!("tiny-{suffix}"));
-        let mut float = laya_candle::pack::load_directory(&d).unwrap();
-        let mut quant = laya_candle::pack::load_directory(&dir(&format!("tiny-int8-{suffix}"))).unwrap();
-        let cases: serde_json::Value = serde_json::from_slice(&std::fs::read(d.join("cases.json")).unwrap()).unwrap();
-        for case in cases.as_array().unwrap() {
-            let input: TokenInput = serde_json::from_value(case["input"].clone()).unwrap();
-            let expected = float.infer(&input).unwrap();
-            let actual = quant.infer(&input).unwrap();
-            assert_eq!(expected.len(), actual.len());
-            for (a, b) in actual.iter().zip(&expected) {
-                assert!((a-b).abs() < 0.002, "{suffix}: int8 {a} vs f32 {b}");
-            }
         }
     }
 }
@@ -121,7 +102,7 @@ fn int8_integer_dot_handles_tail_sign_zero_and_max_width() {
 
 #[test]
 fn stepped_inference_is_identical_and_bound_to_the_pack() {
-    for suffix in ["prenorm", "postnorm", "int8-prenorm", "int8-postnorm"] {
+    for suffix in ["int8-prenorm", "int8-postnorm"] {
         let d = dir(&format!("tiny-{suffix}"));
         let mut model = laya_candle::pack::load_directory(&d).unwrap();
         let input: TokenInput = serde_json::from_slice(&std::fs::read(d.join("input.json")).unwrap()).unwrap();
@@ -179,4 +160,28 @@ fn tiled_int8_matches_integer_reference_including_all_tails() {
             }
         }
     }
+}
+
+#[test]
+fn rejects_legacy_and_relabelled_f32_packs() {
+    use laya_candle::pack::{Builder, Manifest};
+    let raw = std::fs::read(dir("tiny-prenorm").join("manifest.json")).unwrap();
+    assert!(Builder::new(&raw).is_err());
+    let mut manifest: Manifest = serde_json::from_slice(&raw).unwrap();
+    manifest.format = "ic-laya-int8-pack-v1".into();
+    assert!(manifest.validate().is_err());
+    assert!(Builder::new(&serde_json::to_vec(&manifest).unwrap()).is_err());
+}
+
+#[test]
+fn direct_constructor_rejects_f32_matrices() {
+    use candle_core::{Device, DType, Tensor};
+    use laya_candle::{LayaModel, Weight, pack::Manifest};
+    let raw = std::fs::read(dir("tiny-prenorm").join("manifest.json")).unwrap();
+    let manifest: Manifest = serde_json::from_slice(&raw).unwrap();
+    let weights = manifest.tensors.iter().map(|entry| {
+        let tensor = Tensor::zeros(entry.shape.as_slice(), DType::F32, &Device::Cpu).unwrap();
+        (entry.name.clone(), Weight::F32(tensor))
+    }).collect();
+    assert!(matches!(LayaModel::from_weights(manifest.config, [0;32], BackendKind::SyntheticFixture, weights), Err(Error::Invalid(_))));
 }

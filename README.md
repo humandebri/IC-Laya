@@ -46,21 +46,23 @@ Outputs go to `build/`; these commands do not deploy a canister. Follow the Engl
 
 | Check | Result | Scope |
 | --- | --- | --- |
-| Real checkpoint versus the upstream implementation | Maximum absolute logit difference: 4.89e-6 for F32 and 0.141 for INT8; argmax agrees on 4/4 inputs | Four fixed inputs. [Details](docs/INT8.md) |
+| Real checkpoint versus the upstream implementation | Maximum absolute logit difference: 0.141 for INT8; argmax agrees on 4/4 inputs | Four fixed inputs. [Details](docs/INT8.md) |
 | 128-token INT8 inference in a local canister | One update used 39.248B instructions; resumable inference completed in two updates | A repeated Choice input with a fixed Wasm and pack. [Measurements](docs/INT8_OPTIMIZATION_V4.md) |
 | Short raw queries | All 18 tested 16-token cases succeeded; maximum was 4.756B instructions. Inputs of 17 or more tokens are rejected | Owner-only, fixed Wasm and pack. [Measurements](docs/INT8_SHORT_QUERY.md) |
 | Handwritten English classification examples | 14 of 16 matched their assigned labels | A small, unrepresentative probe, not an accuracy estimate. [Inputs and results](docs/INT8_PRACTICAL_128.md) |
 
 These results come from limited inputs in a local environment. They do not guarantee that every 128-token input fits in one update or establish accuracy, calibration, or safety for real tasks. Security or financial decisions require evaluation on the intended use case and human review. The query API returns raw logits, not an authenticated Receipt or a certified response.
 
-F32 model packs and the F32 inference path are retained for checkpoint conversion and numerical comparisons. The documented deployment path uses INT8. W8A8 still uses F32 scales and floating-point operations such as normalization and softmax.
+The [INT8-only cleanup checks](artifacts/int8_only_validation.json) cover local install, upgrade/warmup, query limits, and direct/split inference.
+
+The runtime accepts only INT8 model packs. F32 exports are conversion intermediates; independent F32 reference fixtures are retained for numerical tests. W8A8 still uses F32 scales and floating-point operations such as normalization and softmax.
 
 ## Repository layout
 
 | Path | Contents |
 | --- | --- |
 | `crates/ic-laya-core/` | Types, schemas, math, and workflows |
-| `crates/laya-candle/` | INT8 inference, model pack loading, and numerical reference code |
+| `crates/laya-candle/` | INT8 inference, model pack loading, and numerical tests |
 | `crates/hf-tokenizer/` | Tokenizer adapter |
 | `canisters/` | Decision engine, executor, and mock ledger |
 | `tools/` | Pack conversion, builds, local runs, and benchmarks |
