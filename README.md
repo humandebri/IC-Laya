@@ -1,174 +1,76 @@
-# IC-Laya — 独立開発リポジトリ
+# IC-Laya
 
-Layaの実checkpointをF32/W8A8で読み込み、ICP canisterで推論する独立した実装です。
-IC-Verdict（openJev）との共有workspace・path依存・submoduleはありません。
+IC-Laya is an independent Rust and Internet Computer (ICP) canister implementation of Laya's typed decisions: Choice, Noul, and Score. It includes F32 and W8A8 INT8 inference, a tokenizer adapter, canisters, a mock workflow, and verification tools.
 
-## 出発点と検証状態
+**Pretrained weights are not included.** The small models in `fixtures/` contain random test weights. They do not demonstrate language understanding or decision accuracy. To run the real model, provide a checkpoint and tokenizer whose licenses permit your intended use.
 
-- 2026-09-22に `humandebri/IC-Verdict` のopenJev導入前コミット
-  `e701ad2ffcaee3070239996bf5178b74b009c1d8` からソースを切り出しました。
-- Git履歴・remote・ローカルcanister状態・モデルweight・ビルド生成物は引き継いでいません。
-- 最新のINT8最適化: [INT8_OPTIMIZATION_V4.md](docs/INT8_OPTIMIZATION_V4.md)。128-token Choiceは39.275B命令で、V3比8.33%削減。比較用96入力のlogits・判定はすべて一致。
-  [前回の測定](docs/INT8_OPTIMIZATION_V3.md)、
-  [F32書戻し](docs/INT8_F32_WRITEBACK.md)、[前段階の最適化](docs/INT8_OPTIMIZATION_V2.md)、
-  [初回最適化](docs/INT8_PERFORMANCE.md)も記録しています。
-- 今回のint8実装・検証は [docs/INT8.md](docs/INT8.md)。`artifacts/laya_int8_parity.json` と
-  `artifacts/int8_*` がこの独立環境での新しい実測記録です。
-- 実checkpointのF32は上流と4入力で最大logit誤差4.89e-6。int8は最大0.141、argmax 4/4一致。
-- 実モデルの128-token Choiceは**単一updateで39.248B命令**で成功し、分割推論も2 updateで完走しました。
-  `tools/canister_infer.py --stepped` で継続推論を実行できます。品質・校正・mainnet運用の合格を意味しません。
-- 現行Wasm・packでは、[`--max-update-instructions`で予算を指定](docs/INT8_INSTRUCTION_BUDGET.md)すると、実測に基づいて単一updateか分割推論を選べます。これは推定によるソフト予算です。
-- 単一updateの最大成功実測は**128 tokens**ですが、反復したChoice入力での結果であり、任意の入力での成功保証ではありません。
-  旧Choice schemaの最短28-token入力は8.495B命令でquery上限5Bを超えます。現行packのowner専用raw queryは[最大16 tokensまで受け付け、17以上を推論前に拒否](docs/INT8_SHORT_QUERY.md)します。短い別schemaでの判断品質は未検証です。
-  入力上限は128 tokensです。[範囲と制約](docs/INT8_OPTIMIZATION_V4.md)を参照してください。
-- 以下のv0.2本文と旧artifactsは切り出し元の履歴です。現在の検証状態は上記文書を参照してください。
-- 元コミット以降のIC-Verdict側の修正・最適化は含みません。
+## What it does
 
----
+- Convert a Laya checkpoint into a model pack and run inference in native Rust or a local IC canister.
+- Run owner-only raw inference by update for inputs up to 128 tokens, including the schema prefix. A measured input completed in one update; a resumable path is also available.
+- Run an owner-only raw query for up to 16 tokens with the measured Wasm and INT8 pack. Inputs of 17 or more tokens, and other packs, are rejected before inference.
+- Exercise typed results and workflows locally with a mock ledger.
 
-# IC-Laya — Rust implementation v0.2
+The raw inference APIs return logits. Resumable inference is not connected to the current `evaluate` or executor path. Real-fund transfers are disabled: `LimitedLive` returns `LiveDisabled`.
 
-**Choice・Noul・Score / 英語 / ICP canister / 型付き判断 / 制約付きmock Tx**
+## Quick start
 
-設計だけではなく、Rust workspace、推論演算、canister adapter、テスト、checkpoint変換ツールを実装したソースパッケージです。
-
-> **検証状態 (v0.2):** Rust toolchainのある環境で実際にビルド・テストしました。`cargo test --workspace`は**62件PASS**、`cargo check -p decision-engine --features candle`はPASS、**3 canister分のWasmとCandidを生成済み**（Candle込みで4.8 MiB）、Python参照テスト45件もPASSです。`tools/verify.py --rust --require-rust`は実行可能な8項目すべてPASSです。
->
-> ただし**実Laya checkpointのparity、heap実測、実ledger送金は未検証**です。実checkpointのinstructionsは実測からの外挿で494B〜567B（40B上限の12〜14倍）と判明しており、INT8 + SIMDカーネルで削る方針を[ADR-017](docs/design-v2/adr/ADR-017.md)に記録しました。`fixtures/`はランダムweightで言語理解を証明しません。ビルド成功を性能・品質の証拠とは扱っていません。
->
-> v0.1の「cargoが無くRust未確認」という記述は誤りでした。実際にビルドした結果、`tools/build_one.sh`のbash 3.2非互換、`CARGO_TARGET_DIR`無視、Candle Wasmの`getrandom`欠落という3件の実バグが出たため修正しています。詳細は[docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md)。
-
-## 1. 入っているもの
-
-| 部分 | ソース実装 | 今回の実行検証 |
-|---|---|---|
-| 三primitive、整数ppm分布、Scoreの平均・期待段階・上側確率 | Rust core / typed SDK | 独立Python数値参照を検証。Rustは未実行 |
-| schema固定、prefix上限64・全体128tokens、特殊token拒否 | Rust core / HF tokenizer adapter | Rustテストを用意。未実行 |
-| workflow最大3質問、snapshot照合、失効、予算、nonce、業務重複 | Rust core | Python抽象状態機械は検証。Rustは未実行 |
-| unknown時の予約保持、同一payload再送、遅延成功・upgrade扱い | Rust core / canister adapter | 同上。ICPのmessage境界は未実行 |
-| ModernBERT + decision Transformer + marker scorer | Candle F32演算を実装 | 合成weightのPyTorch/NumPy一致のみ。Candle・実Layaは未確認 |
-| モデルpack・分割アップロード・段階warm-up | Rust loader / engine canister / Python exporter | Python exporterを合成weightで検証 |
-| engine / executor / mock ledger | Rustの3 canister | ソースのみ。Wasm未ビルド |
-| native例、Candid生成、ローカルmock bootstrap、CI | スクリプト・設定を同梱 | CIとdfx手順は未実行 |
-
-**実資金の送金は無効です。** `LimitedLive`を指定しても`LiveDisabled`を返します。実装したoutcallは、専用のmock識別APIを確認したledgerだけに向けます。mock ledgerは残高を模擬するテストダブルで、実在の資産を扱いません。
-
-## 2. ディレクトリ
-
-```text
-crates/
-  ic-laya-core/       # 型、数学、schema、engine契約、policy、状態機械
-  laya-candle/        # batch=1 F32推論、canonical model pack
-  hf-tokenizer/      # tokenizersのRust adapter
-  canister-common/   # stable snapshot、ICRC-1 argument adapter
-canisters/
-  decision-engine/   # 推論。defaultはモデル未ロード
-  executor/          # 委任・workflow・予算・mock dispatch
-  mock-ledger/       # 転送、重複、結果不明のテスト用
-fixtures/            # 小さいランダムweight。実Layaではない
-tools/              # 数値参照、export、ビルド、ローカル起動
-tests/              # Python参照・exportのテスト
-artifacts/           # 実行ログと検証状態
-.github/workflows/   # Rust native / Wasm CI。未実行
-docs/               # 最終設計、16 ADR、実装状況、レビュー
-```
-
-## 3. 最初の確認
-
-### Pythonで、この納品時と同じ参照テストを実行
+The Rust version is pinned in [`rust-toolchain.toml`](rust-toolchain.toml). Python 3 is needed for the Python tools.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
-python tools/generate_fixtures.py
-python -m unittest discover -s tests -v
-python tools/verify.py
-```
-
-このテストはRustを呼びません。抽象Txモデルは実装の独立した参照で、Rust/ICPの挙動を証明するものではありません。`artifacts/verification.json`が各検査を`PASS / FAIL / NOT_RUN`に分けます。
-
-### Rust toolchainのある環境で
-
-```bash
-cargo generate-lockfile
-cargo test --workspace
-cargo run -p ic-laya-core --example mock_workflow
-cargo run -p laya-candle --bin laya-infer -- \
+cargo test --workspace --locked
+cargo check -p decision-engine --features candle --locked
+cargo run --locked -p laya-candle --bin laya-infer -- \
   fixtures/tiny-prenorm fixtures/tiny-prenorm/input.json
-cargo check -p decision-engine --features candle
 ```
 
-`mock_workflow`は三primitiveを固定のスコアで返し、Unknown→Duplicate成功までの状態遷移を試す例です。**英語を理解するモデルではありません。** `laya-infer`の同梱fixtureも、ランダムweightのニューラル演算テストです。
-
-実行できた最初の環境で`Cargo.lock`と`rustc --version`等を記録し、lockをレビュー・commitしてください。この環境では依存解決すら実行できないため、架空のlockfileを作成していません。CIも最初にlockを生成する構成です。
-
-## 4. 型付き結果
-
-```rust,ignore
-let risk: Score<PaymentRisk> =
-    Score::try_from_receipt(&registered_schema, &receipt, &expected_stamp)?;
-
-let mean = risk.mean_ppm();
-let severe_tail = risk.tail_ppm(3)?;
-```
-
-`PaymentRisk`は`DecisionSchema`の実装で、schema ID/version/primitive/option順を宣言します。`expected_stamp`は呼出し側が登録情報と要求から作る値であり、受け取ったreceiptからコピーして検査を省くものではありません。
-
-Scoreは分布を保持します。期待段階は`Σi·p[i]`、平均はそれを`K−1`で割った整数ppm、tailは指定bin以上の質量です。`top1`・`margin`は分布の特徴であって正答確率ではありません。モデル出力からTx権限は発生しません。
-
-## 5. canisterをローカルで試す
-
-前提はRustとDFINITY SDKのインストール済み環境です。以下は**未実行の手順**です。defaultのengineには学習済みモデルを含めません。
+The last command checks the inference path with random test weights; it does not measure decision quality. Run the Python reference tests with:
 
 ```bash
-rustup target add wasm32-unknown-unknown
-bash tools/build_one.sh decision-engine
-bash tools/build_one.sh executor
-bash tools/build_one.sh mock-ledger
-
-# 別プロセスでローカルreplicaを起動してから実行
-# dfx start --background
-python tools/local_demo.py
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
-`local_demo.py`は`--network local`固定で、`install`のみ使用し、既存stateを消す`reinstall`をしません。ローカルでも同名canisterが既に導入済みなら停止します。既定identityをowner/delegateとして使い、テスト専用calibration、trusted operation、mock grantを登録します。自動的なmainnet配備・入金・実資金送信はしません。
-
-CandidはRustの`export_candid!()`から生成して`build/*.did`へ置きます。未コンパイルの段階で手書きのDIDを正本として同梱していません。
-
-実推論featureのビルド候補:
+With the `wasm32-unknown-unknown` Rust target installed, build the canister Wasm modules and Candid interfaces with:
 
 ```bash
 IC_LAYA_CANDLE=1 bash tools/build_one.sh decision-engine
+bash tools/build_one.sh executor
+bash tools/build_one.sh mock-ledger
 ```
 
-Candle/tokenizersのWasm依存経路は未検証です。ブラウザWasm対応をICP互換性の証拠にしていません。CIではこのビルドも必須にして、不適合を隠さない設定にしています。
+Outputs go to `build/`; these commands do not deploy a canister. See the [INT8 guide](docs/INT8.md) for model pack conversion and local canister inference.
 
-## 6. 実Layaを接続する場所
+## What has been measured
 
-F32推論演算は書いてありますが、**公開checkpointを読み込んだ実測はありません**。本パッケージのcanonical tensor名を、元checkpointの実際の名前だと見なさないでください。元実装とconfigから、QKV順、RoPE、norm、GeGLU、decision head、scorer、qtype順、入力token列を確認して対応表を作ります。
+| Check | Result | Scope |
+| --- | --- | --- |
+| Real checkpoint versus the upstream implementation | Maximum absolute logit difference: 4.89e-6 for F32 and 0.141 for INT8; argmax agrees on 4/4 inputs | Four fixed inputs. [Details](docs/INT8.md) |
+| 128-token INT8 inference in a local canister | One update used 39.248B instructions; resumable inference completed in two updates | A repeated Choice input with a fixed Wasm and pack. [Measurements](docs/INT8_OPTIMIZATION_V4.md) |
+| Short raw queries | All 18 tested 16-token cases succeeded; maximum was 4.756B instructions. Inputs of 17 or more tokens are rejected | Owner-only, fixed Wasm and pack. [Measurements](docs/INT8_SHORT_QUERY.md) |
+| Handwritten English classification examples | 14 of 16 matched their assigned labels | A small, unrepresentative probe, not an accuracy estimate. [Inputs and results](docs/INT8_PRACTICAL_128.md) |
 
-```bash
-python tools/pack_checkpoint.py inspect /path/to/checkpoint
-python tools/pack_checkpoint.py export \
-  --source /path/to/checkpoint \
-  --config reviewed-runtime-config.json \
-  --mapping reviewed-tensor-map.json \
-  --tokenizer /path/to/tokenizer.json \
-  --repo convaiinnovations/laya-typed-decisions \
-  --revision ACTUAL_40_CHARACTER_COMMIT \
-  --qtypes 0 1 2 \
-  --out checkpoints/laya-f32
-```
+These results come from limited inputs in a local environment. They do not guarantee that every 128-token input fits in one update or establish accuracy, calibration, or safety for real tasks. Security or financial decisions require evaluation on the intended use case and human review. The query API returns raw logits, not an authenticated Receipt or a certified response.
 
-上記qtype順は**形式例であり未確認の値**です。元コードで確認した順に置き換えてください。`--revision`も実在するimmutable revisionを入力します。exporterはこの値の形式は検査しますが、HFへ問い合わせて真正性を確認しません。
+## Repository layout
 
-対応表はcanonical name→source nameのJSONで、明示的transposeまたはaxis-0結合も指定できます。自動推測・任意Python式・pickle・remote code実行はしません。詳細は[MODEL_PORT.md](docs/MODEL_PORT.md)に記載しました。
+| Path | Contents |
+| --- | --- |
+| `crates/ic-laya-core/` | Types, schemas, math, and workflows |
+| `crates/laya-candle/` | F32 and INT8 inference and model pack loading |
+| `crates/hf-tokenizer/` | Tokenizer adapter |
+| `canisters/` | Decision engine, executor, and mock ledger |
+| `tools/` | Pack conversion, builds, local runs, and benchmarks |
+| `fixtures/`, `tests/` | Random-weight fixtures and reference tests |
+| `artifacts/`, `docs/` | Recorded outputs, instruction counts, and design notes |
 
-## 7. 実送金を閉じている理由と残作業
+See [INT8 implementation and local setup](docs/INT8.md), [performance measurements](docs/INT8_OPTIMIZATION_V4.md), and [instruction budgeting](docs/INT8_INSTRUCTION_BUDGET.md). Other documents include earlier design and investigation notes; their dated claims may describe older revisions.
 
-未完了なのは実モデルparity、用途別calibration、Rust/Wasmビルド、ICP instruction/heap実測、非同期障害試験、対象本番ledgerの確認です。実装済みコードがあることは、これらを通過したことを意味しません。
+## Contributing
 
-現状は安全側の有限容量PoCです。512 workflow、64 registry、engine cache1024件で、削除・compactionは実装していません。上限で停止し、古いnonceや不明Txを消して処理を続けることはしません。stable storageはbounded snapshotで、全量再保存のコストがあり、本番の高頻度処理にはstable table化が必要です。人間reviewの承認再開endpoint、INT8、蒸留、実ledger adapterの有効化も未実装です。
+Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for validation commands and the policy on model files.
 
-次の着手順は、**Rustのビルド修正 → 合成fixtureでCandle照合 → 実Layaのtensor/tokenizer/logit照合 → ICP性能 → fault injection**です。[実装状況](docs/IMPLEMENTATION_STATUS.md)と[自己レビュー](docs/IMPLEMENTATION_REVIEW.md)を先に確認してください。
+## License
+
+New source code in this repository is available under the [MIT License](LICENSE). Dependencies and user-provided checkpoints retain their own licenses; see [NOTICE](NOTICE.md). This is not an official release from the upstream model authors or DFINITY.
