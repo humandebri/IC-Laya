@@ -1,5 +1,7 @@
 # 実装自己レビュー
 
+> Historical note: this document describes an earlier revision. Statements about missing implementations, tests, or measurements are not the current project status. Start with the [English local inference guide](GETTING_STARTED.md) and [current measurement index](README.md).
+
 独立監査ではない。v0.2ではRust compilerによる確認を行った。以下はsourceと参照計算、および実際のビルドで出た指摘・修正。
 
 ## ビルドして初めて判明した不具合（v0.2）
