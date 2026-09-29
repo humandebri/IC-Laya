@@ -40,7 +40,7 @@ bash tools/build_one.sh executor
 bash tools/build_one.sh mock-ledger
 ```
 
-Outputs go to `build/`; these commands do not deploy a canister. See the [INT8 guide](docs/INT8.md) for model pack conversion and local canister inference.
+Outputs go to `build/`; these commands do not deploy a canister. Follow the English [local inference guide](docs/GETTING_STARTED.md) for checkpoint download, model pack conversion, and local canister inference.
 
 ## What has been measured
 
@@ -65,11 +65,11 @@ These results come from limited inputs in a local environment. They do not guara
 | `fixtures/`, `tests/` | Random-weight fixtures and reference tests |
 | `artifacts/`, `docs/` | Recorded outputs, instruction counts, and design notes |
 
-See [INT8 implementation and local setup](docs/INT8.md), [performance measurements](docs/INT8_OPTIMIZATION_V4.md), and [instruction budgeting](docs/INT8_INSTRUCTION_BUDGET.md). Other documents include earlier design and investigation notes; their dated claims may describe older revisions.
+See [INT8 implementation and local setup](docs/INT8.md), [performance measurements](docs/INT8_OPTIMIZATION_V4.md), and [instruction budgeting](docs/INT8_INSTRUCTION_BUDGET.md). The [documentation index](docs/README.md) identifies current guides and historical research notes.
 
 ## Contributing
 
-Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for validation commands and the policy on model files.
+Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for validation commands and the policy on model files. Report vulnerabilities through the private channel in [SECURITY.md](SECURITY.md). Release notes are tracked in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 

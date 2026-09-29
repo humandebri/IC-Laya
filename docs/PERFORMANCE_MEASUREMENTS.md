@@ -1,5 +1,7 @@
 # ICP性能の実測
 
+> Historical note: this document describes an earlier revision. Statements about missing implementations, tests, or measurements are not the current project status. Start with the [English local inference guide](GETTING_STARTED.md) and [current measurement index](README.md).
+
 対象: `tools/measure_inference.py`（local replica上の実測）
 測定日時の記録: `artifacts/inference_measurements.json`
 

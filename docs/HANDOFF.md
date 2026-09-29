@@ -1,5 +1,7 @@
 # Laya独立開発の引き継ぎ
 
+> Historical note: this document describes an earlier revision. Statements about missing implementations, tests, or measurements are not the current project status. Start with the [English local inference guide](GETTING_STARTED.md) and [current measurement index](README.md).
+
 2026-09-22。元フォルダから必要な資料をコピー。元ファイルは保持。
 
 ## 開発の出発点

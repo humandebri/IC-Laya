@@ -1,5 +1,7 @@
 # Laya F32 port: source contract and remaining parity work
 
+> Historical note: this document describes an earlier revision. Statements about missing implementations, tests, or measurements are not the current project status. Start with the [English local inference guide](GETTING_STARTED.md) and [current measurement index](README.md).
+
 ## 実装した演算
 
 batch=1・paddingなしのtoken列に対して、embedding/norm、pre-norm ModernBERT、QKV、split-half RoPE、global/local attention、GeGLU、final norm、question-type embedding、decision Transformer、marker gather、LayerNorm→Linear→GELU→Linear scorerを実装した。decision層はpre/post normとReLU/GELUをconfigで切り替える。

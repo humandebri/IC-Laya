@@ -1,5 +1,7 @@
 # 一次資料と確認範囲
 
+> Historical note: this document describes an earlier revision. Statements about missing implementations, tests, or measurements are not the current project status. Start with the [English local inference guide](GETTING_STARTED.md) and [current measurement index](README.md).
+
 確認日: 2026-09-19（JST）。以下のURLは確認した公開資料。main/stableは変わり得るため、実装時はcheckpoint、ソース、toolchainのrevisionとhashを固定する。今回はweightsの取得・実モデル推論・Rust/Wasm build・ICP deployは実施していない。
 
 | ID | 資料 | 確認範囲 |

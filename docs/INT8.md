@@ -1,5 +1,7 @@
 # Laya int8 canister
 
+For current English setup instructions, see [Run Laya locally](GETTING_STARTED.md). The measurements below include dated implementation history.
+
 最新の実測は [INT8_OPTIMIZATION_V4.md](INT8_OPTIMIZATION_V4.md) を参照。
 128-token Choiceは最終Wasmの単一updateで39.248B命令となり、2 updateの分割推論も完走した。旧Choice schemaの最短28-token入力は約8.495B命令でquery上限5Bを超える。現行packのowner専用[raw queryは最大16 tokens](INT8_SHORT_QUERY.md)で、17以上は推論前に拒否する。前段階は
 [INT8_OPTIMIZATION_V3.md](INT8_OPTIMIZATION_V3.md)、

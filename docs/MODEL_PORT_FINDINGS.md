@@ -1,5 +1,7 @@
 # 実Laya checkpointとの接続: 調査結果
 
+> Historical note: this document describes an earlier revision. Statements about missing implementations, tests, or measurements are not the current project status. Start with the [English local inference guide](GETTING_STARTED.md) and [current measurement index](README.md).
+
 対象: `convaiinnovations/laya-typed-decisions` @ `f9ab0b228f0fc0f14d873dbc99038f135c2da1b2` (immutable revision)
 
 **この文書は構造の突き合わせ結果であり、数値parityの証明ではない。** logits比較は未実施。
