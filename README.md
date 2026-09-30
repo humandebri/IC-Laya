@@ -13,6 +13,17 @@ IC-Laya is an independent Rust and Internet Computer (ICP) canister implementati
 
 The raw inference APIs return logits. Resumable inference is not connected to the current `evaluate` or executor path. Real-fund transfers are disabled: `LimitedLive` returns `LiveDisabled`.
 
+## Experimental SNS proposal triage
+
+`tools/sns_proposal_triage.py` reads public Dashboard proposal JSON, compares selected governance parameters with their historical values in the proposal rendering, and marks extreme changes for additional human review. Token mints and unknown actions also receive review. It is a local, read-only research tool; `standard` means no extra alert from these rules, not that a proposal is safe. The 10x and 1000x thresholds are screening heuristics, not validated accuracy or an execution gate.
+
+```bash
+.venv/bin/python tools/sns_proposal_triage.py --sns-root xjngq-yaaaa-aaaaq-aabha-cai --proposal-id 617
+.venv/bin/python tools/sns_proposal_triage.py --input proposal.json --with-laya
+```
+
+The optional `--with-laya` result is an uncalibrated classifier label. Laya cannot generate a written rationale, and its label never changes the numeric review priority. If the historical values cannot be read, the tool asks for review instead of assuming the change is small.
+
 ## Quick start
 
 The Rust version is pinned in [`rust-toolchain.toml`](rust-toolchain.toml). Python 3 is needed for the Python tools.
@@ -53,7 +64,7 @@ Outputs go to `build/`; these commands do not deploy a canister. Follow the Engl
 
 These results come from limited inputs in a local environment. They do not guarantee that every 128-token input fits in one update or establish accuracy, calibration, or safety for real tasks. Security or financial decisions require evaluation on the intended use case and human review. The query API returns raw logits, not an authenticated Receipt or a certified response.
 
-The [INT8-only cleanup checks](artifacts/int8_only_validation.json) cover local install, upgrade/warmup, query limits, and direct/split inference.
+The INT8-only cleanup checks cover local install, upgrade/warmup, query limits, and direct/split inference. Their detailed output (`artifacts/int8_only_validation.json`) is a local generated artifact; see the [validation notes](docs/INT8_OPTIMIZATION_V4.md).
 
 The runtime accepts only INT8 model packs. F32 exports are conversion intermediates; independent F32 reference fixtures are retained for numerical tests. W8A8 still uses F32 scales and floating-point operations such as normalization and softmax.
 
