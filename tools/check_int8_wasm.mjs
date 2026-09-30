@@ -9,4 +9,6 @@ const instance = await WebAssembly.instantiate(module);
 assert.equal(instance.exports.check(), 920);
 assert.equal(instance.exports.check_quantization(), 144);
 assert.equal(instance.exports.check_writeback(), 216);
-console.log('PASS: 920 integer + 144 quantization + 216 F32 writeback Wasm cases');
+assert.equal(instance.exports.check_q8_ops(), 144);
+assert.equal(instance.exports.check_q8_statistics(), 24);
+console.log('PASS: 920 integer + 144 quantization + 216 F32 writeback + 144 INT8 preparation/norm + 24 statistics Wasm cases');

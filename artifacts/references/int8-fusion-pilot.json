@@ -1,0 +1,13 @@
+{
+  "module_hash": "0x1abfbec7c96856f86bd8bbf86f891d4a480716c3a96fa6c9b1f3491630becc50",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "input_sha256": "4c155792a055e1a459735652ba5f276773619ebcccfcaf4acfb2dc04c4b07f4b",
+  "source_artifact": "int8_fusion/benchmark-128.json",
+  "source_artifact_sha256": "36a3222158cfb6a0d37b4569d57f0775658b175c3e1c693606dfe6e89f2faa59",
+  "logits": [
+    1.5325779,
+    -2.1687548,
+    0.10497774
+  ],
+  "instructions": 47209698416
+}

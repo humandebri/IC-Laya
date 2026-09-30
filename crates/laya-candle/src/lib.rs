@@ -5,6 +5,10 @@
 pub mod int8;
 pub mod profile;
 pub mod pack;
+pub mod continuation;
+pub mod quantized;
+mod q8_ops;
+pub mod epilogue;
 use candle_core::{DType,Device,Tensor,D};
 use ic_laya_core::{engine::InferenceBackend,BackendKind,Digest,Error,Result,TokenInput,MAX_TOKENS};
 use serde::{Deserialize,Serialize};

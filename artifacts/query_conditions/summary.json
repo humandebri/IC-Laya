@@ -1,0 +1,313 @@
+{
+  "module_hash": "0x346015410776174c57cbe72ef6c50906d2f144d9b002e4937e70f8824bf9ed28",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "cases": [
+    {
+      "id": "pilot-128",
+      "input_tokens": 128,
+      "markers": 3,
+      "modes": {
+        "f32": {
+          "query_calls": 11,
+          "schedule": [
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            6
+          ],
+          "raw_payload_bytes": 10498170,
+          "payload_reduction_percent": 37.49874975709566,
+          "max_handler_instructions": 4363272198,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 9008684,
+          "gzip_6_continuation_bytes": 8980276
+        },
+        "int8": {
+          "query_calls": 11,
+          "schedule": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            5
+          ],
+          "raw_payload_bytes": 2644090,
+          "payload_reduction_percent": 37.49503570510008,
+          "max_handler_instructions": 4341742237,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 1468492,
+          "gzip_6_continuation_bytes": 1404942
+        }
+      }
+    },
+    {
+      "id": "choice-natural-03",
+      "input_tokens": 43,
+      "markers": 3,
+      "modes": {
+        "f32": {
+          "query_calls": 5,
+          "schedule": [
+            1,
+            10,
+            9,
+            12
+          ],
+          "raw_payload_bytes": 1411263,
+          "payload_reduction_percent": 74.99709003356428,
+          "max_handler_instructions": 4428757999,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 1262444,
+          "gzip_6_continuation_bytes": 1258818
+        },
+        "int8": {
+          "query_calls": 5,
+          "schedule": [
+            5,
+            8,
+            8,
+            11
+          ],
+          "raw_payload_bytes": 355871,
+          "payload_reduction_percent": 74.98845608074629,
+          "max_handler_instructions": 4197520735,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 219006,
+          "gzip_6_continuation_bytes": 211698
+        }
+      }
+    },
+    {
+      "id": "choice-boundary-65",
+      "input_tokens": 65,
+      "markers": 3,
+      "modes": {
+        "f32": {
+          "query_calls": 6,
+          "schedule": [
+            5,
+            6,
+            6,
+            6,
+            9
+          ],
+          "raw_payload_bytes": 2666112,
+          "payload_reduction_percent": 68.74752590089443,
+          "max_handler_instructions": 4093890607,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 2414708,
+          "gzip_6_continuation_bytes": 2407758
+        },
+        "int8": {
+          "query_calls": 6,
+          "schedule": [
+            5,
+            6,
+            6,
+            6,
+            9
+          ],
+          "raw_payload_bytes": 671912,
+          "payload_reduction_percent": 68.74018059562408,
+          "max_handler_instructions": 4466089312,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 384846,
+          "gzip_6_continuation_bytes": 368806
+        }
+      }
+    },
+    {
+      "id": "score-boundary-112",
+      "input_tokens": 112,
+      "markers": 3,
+      "modes": {
+        "f32": {
+          "query_calls": 11,
+          "schedule": [
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            6
+          ],
+          "raw_payload_bytes": 9186105,
+          "payload_reduction_percent": 37.49873702761516,
+          "max_handler_instructions": 3808239736,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 8472152,
+          "gzip_6_continuation_bytes": 8446550
+        },
+        "int8": {
+          "query_calls": 11,
+          "schedule": [
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            6
+          ],
+          "raw_payload_bytes": 2313785,
+          "payload_reduction_percent": 37.494985492032306,
+          "max_handler_instructions": 4056669287,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 1357452,
+          "gzip_6_continuation_bytes": 1303592
+        }
+      }
+    },
+    {
+      "id": "seven-markers-16",
+      "input_tokens": 16,
+      "markers": 7,
+      "modes": {
+        "f32": {
+          "query_calls": 3,
+          "schedule": [
+            16,
+            16
+          ],
+          "raw_payload_bytes": 262913,
+          "payload_reduction_percent": 87.49471441175982,
+          "max_handler_instructions": 2544188229,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 153422,
+          "gzip_6_continuation_bytes": 152754
+        },
+        "int8": {
+          "query_calls": 3,
+          "schedule": [
+            16,
+            16
+          ],
+          "raw_payload_bytes": 66561,
+          "payload_reduction_percent": 87.47909608558331,
+          "max_handler_instructions": 2808367633,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 26518,
+          "gzip_6_continuation_bytes": 25570
+        }
+      }
+    },
+    {
+      "id": "seven-markers-128",
+      "input_tokens": 128,
+      "markers": 7,
+      "modes": {
+        "f32": {
+          "query_calls": 11,
+          "schedule": [
+            2,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            6
+          ],
+          "raw_payload_bytes": 10498506,
+          "payload_reduction_percent": 37.49871407629243,
+          "max_handler_instructions": 4400322492,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 8822358,
+          "gzip_6_continuation_bytes": 8793120
+        },
+        "int8": {
+          "query_calls": 11,
+          "schedule": [
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            3,
+            5
+          ],
+          "raw_payload_bytes": 2644426,
+          "payload_reduction_percent": 37.4948945053532,
+          "max_handler_instructions": 4335234524,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 1388918,
+          "gzip_6_continuation_bytes": 1320332
+        }
+      }
+    },
+    {
+      "id": "noul",
+      "input_tokens": 45,
+      "markers": 2,
+      "modes": {
+        "f32": {
+          "query_calls": 5,
+          "schedule": [
+            2,
+            9,
+            9,
+            12
+          ],
+          "raw_payload_bytes": 1476835,
+          "payload_reduction_percent": 74.99716845580193,
+          "max_handler_instructions": 4301603801,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 1368768,
+          "gzip_6_continuation_bytes": 1364946
+        },
+        "int8": {
+          "query_calls": 5,
+          "schedule": [
+            5,
+            8,
+            8,
+            11
+          ],
+          "raw_payload_bytes": 372355,
+          "payload_reduction_percent": 74.98876575061915,
+          "max_handler_instructions": 4407432824,
+          "exact_grouping_logits": true,
+          "gzip_1_continuation_bytes": 229780,
+          "gzip_6_continuation_bytes": 221450
+        }
+      }
+    }
+  ],
+  "compression_canister_implemented": false,
+  "query_only_inference": true,
+  "labeled_accuracy_measured": false,
+  "existing_int8_f32_agreement": "88/96 on earlier validated corpus; not remeasured for this grouping search",
+  "tests": {
+    "python": 76,
+    "candle_decision_engine": 6
+  },
+  "source_sha256": {
+    "canisters/decision-engine/src/lib.rs": "44af39391df6935e79c7a1c765aa34847373785e6178e40614d38a16c48ef260",
+    "tools/client_held_query.py": "cfc6d7c5a4b4858bd7e2cdd1e1422b8e3ced5987d9050df9dfd1482ad34c84a4",
+    "tools/explore_query_conditions.py": "c80301867a383cb10eb3bc541b9321c52908969ba4c69ff012a30403f5af168a",
+    "tools/explore_lossless_state_codecs.py": "916b776b809f9315ae12e4c9f8fcedbed5ddacac17642881f1ea18946f78cc0d"
+  }
+}

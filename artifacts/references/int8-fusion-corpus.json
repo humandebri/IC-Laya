@@ -1,0 +1,1695 @@
+{
+  "module_hash": "0x1abfbec7c96856f86bd8bbf86f891d4a480716c3a96fa6c9b1f3491630becc50",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "corpus_sha256": "aa75a7c811ab4a5698dcb6d8fc9d65440889bf0a98d3ff59bf6f8ae279b3370f",
+  "baseline_sha256": "b12c2143d170d7711f229933481d98fcc6ff7a3462c46b193aa3b09dc9f2b62f",
+  "measured_at": "2026-09-30T03:14:42.286803+00:00",
+  "network": "local",
+  "query_cache_controlled": false,
+  "labeled_accuracy_measured": false,
+  "baseline_scope": "paired F32 queries on the same Wasm; also checked against bound historical canister results",
+  "cases": [
+    {
+      "id": "choice-natural-00",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        1.7130183,
+        -2.230556,
+        0.44230524
+      ],
+      "logits": [
+        1.8971463,
+        -2.2575598,
+        0.19750439
+      ],
+      "instructions": 16455747226,
+      "decision_matches": true,
+      "input_tokens": 44
+    },
+    {
+      "id": "choice-natural-01",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.6774145,
+        -0.78685236,
+        0.7434696
+      ],
+      "logits": [
+        -1.1266867,
+        -0.6029541,
+        0.8916396
+      ],
+      "instructions": 15616550699,
+      "decision_matches": true,
+      "input_tokens": 42
+    },
+    {
+      "id": "choice-natural-02",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.4436922,
+        0.2864263,
+        1.1274356
+      ],
+      "logits": [
+        -0.7058283,
+        -0.410225,
+        0.5743801
+      ],
+      "instructions": 13980940950,
+      "decision_matches": true,
+      "input_tokens": 38
+    },
+    {
+      "id": "choice-natural-03",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -2.0198948,
+        -0.035053194,
+        -0.098879
+      ],
+      "logits": [
+        -1.5091094,
+        -0.61897576,
+        0.59088814
+      ],
+      "instructions": 16194994523,
+      "decision_matches": false,
+      "input_tokens": 43
+    },
+    {
+      "id": "choice-natural-04",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.7286611,
+        -0.5120474,
+        1.0022585
+      ],
+      "logits": [
+        -1.0239563,
+        -0.36009294,
+        1.1238303
+      ],
+      "instructions": 14583435082,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "choice-natural-05",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.688051,
+        -2.8429694,
+        -0.2195123
+      ],
+      "logits": [
+        -1.4600365,
+        -2.7028842,
+        0.20620532
+      ],
+      "instructions": 14581825545,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "choice-natural-06",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.2826577,
+        0.30697906,
+        1.3830675
+      ],
+      "logits": [
+        -1.4207274,
+        0.21027586,
+        1.3283321
+      ],
+      "instructions": 15617782627,
+      "decision_matches": true,
+      "input_tokens": 42
+    },
+    {
+      "id": "choice-natural-07",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.43670917,
+        -0.6296352,
+        0.8637319
+      ],
+      "logits": [
+        0.41611236,
+        -0.28258675,
+        0.98939455
+      ],
+      "instructions": 16197652864,
+      "decision_matches": true,
+      "input_tokens": 43
+    },
+    {
+      "id": "choice-natural-08",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -2.6221147,
+        -0.43443108,
+        1.978673
+      ],
+      "logits": [
+        -2.3365781,
+        -0.94589055,
+        1.809282
+      ],
+      "instructions": 14588663525,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "choice-natural-09",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.18454261,
+        -0.91283506,
+        1.0286278
+      ],
+      "logits": [
+        0.25101343,
+        -0.66696864,
+        0.79694706
+      ],
+      "instructions": 14578207498,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "choice-natural-10",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -2.677568,
+        -2.1528404,
+        -0.17154552
+      ],
+      "logits": [
+        -2.5116205,
+        -2.2471862,
+        0.08001296
+      ],
+      "instructions": 15619041787,
+      "decision_matches": true,
+      "input_tokens": 42
+    },
+    {
+      "id": "choice-natural-11",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.95652145,
+        -0.3451166,
+        0.05907891
+      ],
+      "logits": [
+        -0.45780674,
+        0.18173145,
+        -0.1461108
+      ],
+      "instructions": 15616464290,
+      "decision_matches": false,
+      "input_tokens": 42
+    },
+    {
+      "id": "choice-natural-12",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.9309317,
+        -0.64275986,
+        0.5626713
+      ],
+      "logits": [
+        -0.80965793,
+        -0.46011412,
+        0.62113273
+      ],
+      "instructions": 13520502871,
+      "decision_matches": true,
+      "input_tokens": 37
+    },
+    {
+      "id": "choice-natural-13",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.1925107,
+        -0.9085826,
+        1.6029379
+      ],
+      "logits": [
+        -0.7401425,
+        -0.87489563,
+        1.6471659
+      ],
+      "instructions": 14547409656,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "choice-natural-14",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.48671526,
+        -1.1945363,
+        1.2232683
+      ],
+      "logits": [
+        0.29546592,
+        -1.3613884,
+        1.1549481
+      ],
+      "instructions": 14582720812,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "choice-natural-15",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -2.541363,
+        -1.7496555,
+        0.9359103
+      ],
+      "logits": [
+        -1.9557395,
+        -1.4580169,
+        0.8667069
+      ],
+      "instructions": 15151385522,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "choice-natural-16",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -2.922528,
+        -0.80226547,
+        1.0218618
+      ],
+      "logits": [
+        -2.8555396,
+        -1.0606887,
+        0.92879725
+      ],
+      "instructions": 14582117158,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "choice-natural-17",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.71591586,
+        -1.9714196,
+        0.6870694
+      ],
+      "logits": [
+        -0.62119657,
+        -1.9918054,
+        0.7925032
+      ],
+      "instructions": 14543123764,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "choice-natural-18",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.24367738,
+        -0.30380392,
+        1.7890362
+      ],
+      "logits": [
+        0.33061358,
+        -0.39456034,
+        1.7654246
+      ],
+      "instructions": 15616839756,
+      "decision_matches": true,
+      "input_tokens": 42
+    },
+    {
+      "id": "choice-natural-19",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -2.2227862,
+        -0.041933164,
+        1.3473562
+      ],
+      "logits": [
+        -1.8176696,
+        -0.2973295,
+        0.8829343
+      ],
+      "instructions": 15150028525,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "choice-natural-20",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.5647134,
+        -1.9037528,
+        0.5714981
+      ],
+      "logits": [
+        -0.61289555,
+        -1.6806988,
+        0.6008347
+      ],
+      "instructions": 14540649597,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "choice-natural-21",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.02282437,
+        0.06910928,
+        1.2587292
+      ],
+      "logits": [
+        -0.2539047,
+        0.21273679,
+        0.9877691
+      ],
+      "instructions": 15151014164,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "choice-natural-22",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -2.199033,
+        -0.33356538,
+        0.67413646
+      ],
+      "logits": [
+        -2.2900705,
+        -0.37841436,
+        0.6310015
+      ],
+      "instructions": 15152357612,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "choice-natural-23",
+      "schema": "choice",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.9138536,
+        -0.31842393,
+        -0.5835483
+      ],
+      "logits": [
+        -1.2146225,
+        -0.42116946,
+        -0.006757401
+      ],
+      "instructions": 16447877958,
+      "decision_matches": false,
+      "input_tokens": 44
+    },
+    {
+      "id": "choice-boundary-35",
+      "schema": "choice",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        0.9719198,
+        -0.76055354,
+        1.4565529
+      ],
+      "logits": [
+        1.6161677,
+        -0.664996,
+        0.9709201
+      ],
+      "instructions": 12735920415,
+      "decision_matches": false,
+      "input_tokens": 35
+    },
+    {
+      "id": "choice-boundary-63",
+      "schema": "choice",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        1.2588612,
+        -2.1272266,
+        0.6711373
+      ],
+      "logits": [
+        1.1856887,
+        -2.2222142,
+        0.612993
+      ],
+      "instructions": 24387409872,
+      "decision_matches": true,
+      "input_tokens": 63
+    },
+    {
+      "id": "choice-boundary-64",
+      "schema": "choice",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        1.193822,
+        -2.239922,
+        0.5372669
+      ],
+      "logits": [
+        1.2329632,
+        -2.1206138,
+        0.4931593
+      ],
+      "instructions": 22606640254,
+      "decision_matches": true,
+      "input_tokens": 64
+    },
+    {
+      "id": "choice-boundary-65",
+      "schema": "choice",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        1.1216102,
+        -2.2893438,
+        0.7973532
+      ],
+      "logits": [
+        1.1068667,
+        -2.0610118,
+        0.86613005
+      ],
+      "instructions": 23218354140,
+      "decision_matches": true,
+      "input_tokens": 65
+    },
+    {
+      "id": "choice-boundary-96",
+      "schema": "choice",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        1.0181341,
+        -1.4883227,
+        0.88033146
+      ],
+      "logits": [
+        0.83764046,
+        -1.0153558,
+        0.8835614
+      ],
+      "instructions": 34843302730,
+      "decision_matches": false,
+      "input_tokens": 96
+    },
+    {
+      "id": "choice-boundary-112",
+      "schema": "choice",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        1.0288358,
+        -1.6918596,
+        0.3423704
+      ],
+      "logits": [
+        0.8943198,
+        -1.4508181,
+        0.31620485
+      ],
+      "instructions": 41185907484,
+      "decision_matches": true,
+      "input_tokens": 112
+    },
+    {
+      "id": "choice-boundary-127",
+      "schema": "choice",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        0.9948462,
+        -1.4919124,
+        0.2790797
+      ],
+      "logits": [
+        0.8158188,
+        -1.0497899,
+        0.4213266
+      ],
+      "instructions": 50092855657,
+      "decision_matches": true,
+      "input_tokens": 127
+    },
+    {
+      "id": "choice-boundary-128",
+      "schema": "choice",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        0.99742746,
+        -1.5374423,
+        0.32783198
+      ],
+      "logits": [
+        0.9557864,
+        -1.3268605,
+        0.31313637
+      ],
+      "instructions": 47222710375,
+      "decision_matches": true,
+      "input_tokens": 128
+    },
+    {
+      "id": "noul-natural-00",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.6521304,
+        0.20382941
+      ],
+      "logits": [
+        -1.4550712,
+        0.13364442
+      ],
+      "instructions": 18665134550,
+      "decision_matches": true,
+      "input_tokens": 51
+    },
+    {
+      "id": "noul-natural-01",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        3.2810984,
+        -0.79103005
+      ],
+      "logits": [
+        3.0500402,
+        -0.64162195
+      ],
+      "instructions": 17617833673,
+      "decision_matches": true,
+      "input_tokens": 49
+    },
+    {
+      "id": "noul-natural-02",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        2.7696939,
+        -0.45842993
+      ],
+      "logits": [
+        2.7673461,
+        -0.46811944
+      ],
+      "instructions": 17025919834,
+      "decision_matches": true,
+      "input_tokens": 45
+    },
+    {
+      "id": "noul-natural-03",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        3.4385066,
+        -0.80499595
+      ],
+      "logits": [
+        3.1929693,
+        -0.68788177
+      ],
+      "instructions": 18092586105,
+      "decision_matches": true,
+      "input_tokens": 50
+    },
+    {
+      "id": "noul-natural-04",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        1.7536916,
+        -0.12430838
+      ],
+      "logits": [
+        0.2566328,
+        0.061510846
+      ],
+      "instructions": 18084124695,
+      "decision_matches": true,
+      "input_tokens": 47
+    },
+    {
+      "id": "noul-natural-05",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        5.0990334,
+        -0.8872024
+      ],
+      "logits": [
+        4.3151264,
+        -0.8370024
+      ],
+      "instructions": 18090607636,
+      "decision_matches": true,
+      "input_tokens": 47
+    },
+    {
+      "id": "noul-natural-06",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        3.0736644,
+        -0.6004768
+      ],
+      "logits": [
+        3.5006387,
+        -0.5460331
+      ],
+      "instructions": 17620173879,
+      "decision_matches": true,
+      "input_tokens": 49
+    },
+    {
+      "id": "noul-natural-07",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.41847903,
+        0.12778266
+      ],
+      "logits": [
+        0.6443677,
+        0.1316144
+      ],
+      "instructions": 18084112620,
+      "decision_matches": true,
+      "input_tokens": 50
+    },
+    {
+      "id": "noul-natural-08",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        2.622223,
+        -0.47473738
+      ],
+      "logits": [
+        2.3017833,
+        -0.3308229
+      ],
+      "instructions": 18092579032,
+      "decision_matches": true,
+      "input_tokens": 47
+    },
+    {
+      "id": "noul-natural-09",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        3.231652,
+        -0.70953333
+      ],
+      "logits": [
+        2.9279752,
+        -0.60033786
+      ],
+      "instructions": 18087042741,
+      "decision_matches": true,
+      "input_tokens": 47
+    },
+    {
+      "id": "noul-natural-10",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        4.595894,
+        -0.71176535
+      ],
+      "logits": [
+        4.317112,
+        -0.43762362
+      ],
+      "instructions": 17624850530,
+      "decision_matches": true,
+      "input_tokens": 49
+    },
+    {
+      "id": "noul-natural-11",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        2.9100676,
+        -0.53943413
+      ],
+      "logits": [
+        2.6724472,
+        -0.5212441
+      ],
+      "instructions": 17617427887,
+      "decision_matches": true,
+      "input_tokens": 49
+    },
+    {
+      "id": "noul-natural-12",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        3.2436616,
+        -0.7002854
+      ],
+      "logits": [
+        2.5880163,
+        -0.5049299
+      ],
+      "instructions": 16439610321,
+      "decision_matches": true,
+      "input_tokens": 44
+    },
+    {
+      "id": "noul-natural-13",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        2.1560204,
+        -0.3945192
+      ],
+      "logits": [
+        1.7101936,
+        -0.25121528
+      ],
+      "instructions": 17498686822,
+      "decision_matches": true,
+      "input_tokens": 46
+    },
+    {
+      "id": "noul-natural-14",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        1.0306568,
+        -0.043776136
+      ],
+      "logits": [
+        1.0200081,
+        -0.016250813
+      ],
+      "instructions": 18084550705,
+      "decision_matches": true,
+      "input_tokens": 47
+    },
+    {
+      "id": "noul-natural-15",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        4.6015425,
+        -0.81021637
+      ],
+      "logits": [
+        3.9448895,
+        -0.7995815
+      ],
+      "instructions": 17040803404,
+      "decision_matches": true,
+      "input_tokens": 48
+    },
+    {
+      "id": "noul-natural-16",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        5.2867255,
+        -0.6706205
+      ],
+      "logits": [
+        5.0653462,
+        -0.8098138
+      ],
+      "instructions": 18093679453,
+      "decision_matches": true,
+      "input_tokens": 47
+    },
+    {
+      "id": "noul-natural-17",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        3.3552115,
+        -0.7923464
+      ],
+      "logits": [
+        2.8633285,
+        -0.46630463
+      ],
+      "instructions": 17499668261,
+      "decision_matches": true,
+      "input_tokens": 46
+    },
+    {
+      "id": "noul-natural-18",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.396092,
+        0.08861421
+      ],
+      "logits": [
+        0.53550655,
+        0.095839426
+      ],
+      "instructions": 17609440516,
+      "decision_matches": true,
+      "input_tokens": 49
+    },
+    {
+      "id": "noul-natural-19",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        1.295471,
+        -0.041610543
+      ],
+      "logits": [
+        1.3468236,
+        -0.052087255
+      ],
+      "instructions": 17031347868,
+      "decision_matches": true,
+      "input_tokens": 48
+    },
+    {
+      "id": "noul-natural-20",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        4.359547,
+        -0.68029207
+      ],
+      "logits": [
+        3.1660838,
+        -0.63512385
+      ],
+      "instructions": 17497817877,
+      "decision_matches": true,
+      "input_tokens": 46
+    },
+    {
+      "id": "noul-natural-21",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        1.9656343,
+        -0.12906995
+      ],
+      "logits": [
+        2.0155861,
+        -0.1602776
+      ],
+      "instructions": 17035469822,
+      "decision_matches": true,
+      "input_tokens": 48
+    },
+    {
+      "id": "noul-natural-22",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        2.982392,
+        -0.61707973
+      ],
+      "logits": [
+        2.3584247,
+        -0.43153295
+      ],
+      "instructions": 17037256258,
+      "decision_matches": true,
+      "input_tokens": 48
+    },
+    {
+      "id": "noul-natural-23",
+      "schema": "noul",
+      "kind": "natural_text",
+      "baseline_logits": [
+        7.163976,
+        -0.67999
+      ],
+      "logits": [
+        3.9786437,
+        -0.72686815
+      ],
+      "instructions": 18672977404,
+      "decision_matches": true,
+      "input_tokens": 51
+    },
+    {
+      "id": "noul-boundary-35",
+      "schema": "noul",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        2.482936,
+        -0.4794719
+      ],
+      "logits": [
+        2.2012658,
+        -0.37647918
+      ],
+      "instructions": 12723165054,
+      "decision_matches": true,
+      "input_tokens": 35
+    },
+    {
+      "id": "noul-boundary-63",
+      "schema": "noul",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -1.6627563,
+        0.21845359
+      ],
+      "logits": [
+        -1.6095016,
+        0.19664352
+      ],
+      "instructions": 24375326671,
+      "decision_matches": true,
+      "input_tokens": 63
+    },
+    {
+      "id": "noul-boundary-64",
+      "schema": "noul",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -1.6044564,
+        0.21646312
+      ],
+      "logits": [
+        -1.5583786,
+        0.20955801
+      ],
+      "instructions": 22596709200,
+      "decision_matches": true,
+      "input_tokens": 64
+    },
+    {
+      "id": "noul-boundary-65",
+      "schema": "noul",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -1.7151856,
+        0.23989561
+      ],
+      "logits": [
+        -1.5548391,
+        0.18532439
+      ],
+      "instructions": 23207173542,
+      "decision_matches": true,
+      "input_tokens": 65
+    },
+    {
+      "id": "noul-boundary-96",
+      "schema": "noul",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -1.4141423,
+        0.17483164
+      ],
+      "logits": [
+        -1.4132148,
+        0.14698665
+      ],
+      "instructions": 34829414368,
+      "decision_matches": true,
+      "input_tokens": 96
+    },
+    {
+      "id": "noul-boundary-112",
+      "schema": "noul",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -1.2856212,
+        0.14659032
+      ],
+      "logits": [
+        -1.2538627,
+        0.15509002
+      ],
+      "instructions": 41173920677,
+      "decision_matches": true,
+      "input_tokens": 112
+    },
+    {
+      "id": "noul-boundary-127",
+      "schema": "noul",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -1.2190472,
+        0.141584
+      ],
+      "logits": [
+        -1.1527433,
+        0.12053099
+      ],
+      "instructions": 50082390567,
+      "decision_matches": true,
+      "input_tokens": 127
+    },
+    {
+      "id": "noul-boundary-128",
+      "schema": "noul",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -1.4370568,
+        0.17439447
+      ],
+      "logits": [
+        -0.84492093,
+        0.08200526
+      ],
+      "instructions": 47209159866,
+      "decision_matches": true,
+      "input_tokens": 128
+    },
+    {
+      "id": "score-natural-00",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.7443765,
+        0.22744346,
+        1.6963248
+      ],
+      "logits": [
+        -0.6377637,
+        0.5431426,
+        1.3740772
+      ],
+      "instructions": 16191208687,
+      "decision_matches": true,
+      "input_tokens": 43
+    },
+    {
+      "id": "score-natural-01",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.18225169,
+        1.1747382,
+        0.6161856
+      ],
+      "logits": [
+        0.33765465,
+        1.2634329,
+        0.655357
+      ],
+      "instructions": 15148461799,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "score-natural-02",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -1.1644039,
+        0.30404416,
+        1.4927663
+      ],
+      "logits": [
+        -0.50546664,
+        0.37522122,
+        1.3503981
+      ],
+      "instructions": 13522041209,
+      "decision_matches": true,
+      "input_tokens": 37
+    },
+    {
+      "id": "score-natural-03",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.81520873,
+        1.627126,
+        0.6820923
+      ],
+      "logits": [
+        0.54115313,
+        1.4420276,
+        0.51081806
+      ],
+      "instructions": 15609257283,
+      "decision_matches": true,
+      "input_tokens": 42
+    },
+    {
+      "id": "score-natural-04",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.69650376,
+        1.2076973,
+        1.4809384
+      ],
+      "logits": [
+        -0.4077789,
+        1.2591126,
+        1.3465403
+      ],
+      "instructions": 14537001816,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "score-natural-05",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.095364854,
+        1.5672108,
+        1.1041104
+      ],
+      "logits": [
+        0.3347703,
+        1.5252233,
+        1.0996951
+      ],
+      "instructions": 14535952628,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "score-natural-06",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.15506557,
+        1.0060964,
+        0.8020086
+      ],
+      "logits": [
+        0.3054646,
+        1.1703382,
+        1.1250603
+      ],
+      "instructions": 15147210834,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "score-natural-07",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.044958204,
+        1.1375039,
+        1.1704532
+      ],
+      "logits": [
+        0.22091398,
+        1.2441361,
+        1.0938474
+      ],
+      "instructions": 15614130491,
+      "decision_matches": false,
+      "input_tokens": 42
+    },
+    {
+      "id": "score-natural-08",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.5685798,
+        0.17345382,
+        1.6280417
+      ],
+      "logits": [
+        0.3833205,
+        0.23444802,
+        1.5735902
+      ],
+      "instructions": 14545275398,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "score-natural-09",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.30784786,
+        1.0102074,
+        1.2930557
+      ],
+      "logits": [
+        0.07792447,
+        0.9653572,
+        1.2319179
+      ],
+      "instructions": 14534291548,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "score-natural-10",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.25155827,
+        1.2378428,
+        0.9456325
+      ],
+      "logits": [
+        0.62282366,
+        1.4869468,
+        0.8433927
+      ],
+      "instructions": 15148576467,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "score-natural-11",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.11051108,
+        0.9699335,
+        0.3130839
+      ],
+      "logits": [
+        0.051341683,
+        0.689988,
+        0.29438582
+      ],
+      "instructions": 15146598936,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "score-natural-12",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.640878,
+        1.0785666,
+        1.1717006
+      ],
+      "logits": [
+        -0.3761853,
+        1.2543772,
+        1.4155008
+      ],
+      "instructions": 12962891043,
+      "decision_matches": true,
+      "input_tokens": 36
+    },
+    {
+      "id": "score-natural-13",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.6065203,
+        0.9345586,
+        1.3273487
+      ],
+      "logits": [
+        -0.18666989,
+        0.90622437,
+        1.521657
+      ],
+      "instructions": 13976796853,
+      "decision_matches": true,
+      "input_tokens": 38
+    },
+    {
+      "id": "score-natural-14",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.041125234,
+        1.218029,
+        0.929282
+      ],
+      "logits": [
+        -0.0055559035,
+        1.1748354,
+        0.72892606
+      ],
+      "instructions": 14539538072,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "score-natural-15",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.7452635,
+        1.0728133,
+        0.9265968
+      ],
+      "logits": [
+        -0.29566282,
+        1.3017794,
+        0.7236011
+      ],
+      "instructions": 14576535657,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "score-natural-16",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.9571194,
+        1.7396268,
+        0.28492188
+      ],
+      "logits": [
+        1.1021135,
+        1.6729221,
+        0.49156404
+      ],
+      "instructions": 14534810022,
+      "decision_matches": true,
+      "input_tokens": 39
+    },
+    {
+      "id": "score-natural-17",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.96890104,
+        1.3178765,
+        1.4013352
+      ],
+      "logits": [
+        -0.7824385,
+        1.3759714,
+        1.3885784
+      ],
+      "instructions": 13971061889,
+      "decision_matches": true,
+      "input_tokens": 38
+    },
+    {
+      "id": "score-natural-18",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.10794306,
+        1.1861243,
+        1.3138543
+      ],
+      "logits": [
+        -0.1977759,
+        1.2768674,
+        1.2915828
+      ],
+      "instructions": 15144865950,
+      "decision_matches": true,
+      "input_tokens": 41
+    },
+    {
+      "id": "score-natural-19",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.6908524,
+        0.7216819,
+        1.3507335
+      ],
+      "logits": [
+        -0.71599704,
+        0.6904497,
+        1.3824928
+      ],
+      "instructions": 14576351697,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "score-natural-20",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.9817325,
+        1.6604977,
+        0.7502987
+      ],
+      "logits": [
+        0.72847104,
+        1.6260933,
+        0.966323
+      ],
+      "instructions": 13968596483,
+      "decision_matches": true,
+      "input_tokens": 38
+    },
+    {
+      "id": "score-natural-21",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.31542552,
+        1.5713116,
+        1.0050285
+      ],
+      "logits": [
+        0.5809359,
+        1.623754,
+        1.170727
+      ],
+      "instructions": 14574748865,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "score-natural-22",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        -0.42593035,
+        0.53488004,
+        1.1263572
+      ],
+      "logits": [
+        -0.2723117,
+        0.96255875,
+        1.0524842
+      ],
+      "instructions": 14575631882,
+      "decision_matches": true,
+      "input_tokens": 40
+    },
+    {
+      "id": "score-natural-23",
+      "schema": "score",
+      "kind": "natural_text",
+      "baseline_logits": [
+        0.844437,
+        0.6575104,
+        -0.092470646
+      ],
+      "logits": [
+        1.0952696,
+        1.0731771,
+        0.50488913
+      ],
+      "instructions": 16185245358,
+      "decision_matches": true,
+      "input_tokens": 43
+    },
+    {
+      "id": "score-boundary-35",
+      "schema": "score",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -0.9407078,
+        -0.11303771,
+        2.1066523
+      ],
+      "logits": [
+        -0.31720972,
+        0.16240053,
+        1.957175
+      ],
+      "instructions": 12730741256,
+      "decision_matches": true,
+      "input_tokens": 35
+    },
+    {
+      "id": "score-boundary-63",
+      "schema": "score",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -0.8534374,
+        0.77674985,
+        1.5364414
+      ],
+      "logits": [
+        -0.27600157,
+        0.65474236,
+        1.521538
+      ],
+      "instructions": 24390786456,
+      "decision_matches": true,
+      "input_tokens": 63
+    },
+    {
+      "id": "score-boundary-64",
+      "schema": "score",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -1.1564655,
+        0.48120767,
+        1.4924234
+      ],
+      "logits": [
+        -0.7656948,
+        0.73686945,
+        1.622626
+      ],
+      "instructions": 22610911924,
+      "decision_matches": true,
+      "input_tokens": 64
+    },
+    {
+      "id": "score-boundary-65",
+      "schema": "score",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -0.9343279,
+        0.85180444,
+        1.4891467
+      ],
+      "logits": [
+        -0.7000142,
+        0.8292878,
+        1.4879099
+      ],
+      "instructions": 23221957380,
+      "decision_matches": true,
+      "input_tokens": 65
+    },
+    {
+      "id": "score-boundary-96",
+      "schema": "score",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        0.12042247,
+        1.393421,
+        1.4290649
+      ],
+      "logits": [
+        0.555268,
+        1.2858361,
+        1.0949069
+      ],
+      "instructions": 34843048026,
+      "decision_matches": false,
+      "input_tokens": 96
+    },
+    {
+      "id": "score-boundary-112",
+      "schema": "score",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        0.120289,
+        1.3216044,
+        1.3171325
+      ],
+      "logits": [
+        -0.16287312,
+        1.0569985,
+        1.3267393
+      ],
+      "instructions": 41185830916,
+      "decision_matches": false,
+      "input_tokens": 112
+    },
+    {
+      "id": "score-boundary-127",
+      "schema": "score",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -0.17765532,
+        1.1719671,
+        1.3276256
+      ],
+      "logits": [
+        0.07099284,
+        1.2223,
+        1.3308284
+      ],
+      "instructions": 50094170442,
+      "decision_matches": true,
+      "input_tokens": 127
+    },
+    {
+      "id": "score-boundary-128",
+      "schema": "score",
+      "kind": "length_boundary",
+      "baseline_logits": [
+        -0.20316152,
+        1.1227856,
+        1.4372214
+      ],
+      "logits": [
+        -0.37765056,
+        1.0549238,
+        1.2896879
+      ],
+      "instructions": 47222534384,
+      "decision_matches": true,
+      "input_tokens": 128
+    }
+  ],
+  "complete": true,
+  "worst_abs_error": 3.1853323,
+  "median_abs_error": 0.27936375000000024,
+  "worst_f32_reference_abs_error": 0.0,
+  "decision_disagreements": [
+    "choice-natural-03",
+    "choice-natural-11",
+    "choice-natural-23",
+    "choice-boundary-35",
+    "choice-boundary-96",
+    "score-natural-07",
+    "score-boundary-96",
+    "score-boundary-112"
+  ],
+  "max_query_handler_instructions": 3446430957,
+  "module_unchanged": true,
+  "source_artifact": "int8_fusion/corpus.json",
+  "source_artifact_sha256": "1bd07e6be5ea273a8864c7908b2a9d88ee9b5d8f05bc7642361848aa41134e74"
+}

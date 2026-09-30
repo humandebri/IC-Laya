@@ -1,0 +1,53 @@
+{
+  "module_hash": "0x7f82edaf3ca92b86d186f89a842eb3a314a7979de9af7f814f972c955c479c05",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "input_sha256": "4c155792a055e1a459735652ba5f276773619ebcccfcaf4acfb2dc04c4b07f4b",
+  "query_steps_per_call": 2,
+  "candid_request_and_continuation_bytes": {
+    "f32": 16796736,
+    "int8": 4230208
+  },
+  "byte_reduction_percent": 74.81529744826614,
+  "median_instructions": {
+    "f32": 39544882944,
+    "int8": 47373198979
+  },
+  "instruction_increase_percent": 19.796027835221498,
+  "medians_seconds": {
+    "f32": 2.281595957989339,
+    "int8": 1.0149152500089258
+  },
+  "wall_time_reduction_percent": 55.517310308380715,
+  "timing_scope": "local CLI, queries and parsing; repeated queries may be cached",
+  "query_cache_controlled": false,
+  "corpus_cases": 96,
+  "baseline_decisions_matching": 89,
+  "decision_disagreements": [
+    "choice-natural-03",
+    "choice-natural-11",
+    "choice-natural-23",
+    "choice-boundary-35",
+    "choice-boundary-96",
+    "score-natural-07",
+    "score-boundary-96"
+  ],
+  "worst_abs_error": 3.9964832999999995,
+  "median_abs_error": 0.29853604999999994,
+  "labeled_accuracy_measured": false,
+  "max_query_handler_instructions": 3457108905,
+  "simd_vs_before_simd_max_abs_error": 0.0,
+  "profile_inclusive_costs": {
+    "q8.integer_dots": 30159067520,
+    "q8.requantize": 1669591648,
+    "q8.linear": 31881965818,
+    "q8.attention.core": 8774177289,
+    "q8.norm": 1187028465
+  },
+  "baseline_correction": {
+    "corrected_reference": "../int8_optimization_v4/baseline-canister-corpus.json",
+    "corrected_decision_disagreements": 8,
+    "original_reference_disagreements": 7,
+    "analysis": "../../docs/INT8_FUSION_AND_ERROR_ANALYSIS.md",
+    "raw_historical_metrics_preserved": true
+  }
+}
