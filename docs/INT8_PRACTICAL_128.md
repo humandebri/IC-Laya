@@ -9,7 +9,7 @@
 | セキュリティ報告の緊急度 | 3/4 | 未知のログインを`medium`ではなく`low`と判定 |
 | **合計** | **14/16** | 代表性のない小規模診断 |
 
-全件29〜103 tokensで128-token上限内。推論はすべて**1 update**で完走し、8,945,450,812〜31,609,139,020命令だった。raw logits、選択肢、入力ID、命令数、Wasm・pack hashは[単一updateの結果JSON](../artifacts/int8_optimization_v4/practical-128-probe.json)に保存した。[先行する2 update測定](../artifacts/int8_optimization_v4/practical-128-stepped-probe.json)と入力、Wasm・pack hash、全16件のlogits・判定が一致した。単一updateは分割実行より1件当たり6,002,700〜12,959,129命令少ない。
+全件29〜103 tokensで128-token上限内。推論はすべて**1 update**で完走し、8,945,450,812〜31,609,139,020命令だった。raw logits、選択肢、入力ID、命令数、Wasm・pack hashは単一updateの結果JSON（ローカル生成物: `artifacts/int8_optimization_v4/practical-128-probe.json`）に保存した。先行する2 update測定（ローカル生成物: `artifacts/int8_optimization_v4/practical-128-stepped-probe.json`）と入力、Wasm・pack hash、全16件のlogits・判定が一致した。単一updateは分割実行より1件当たり6,002,700〜12,959,129命令少ない。
 
 誤判定の2件はどちらも僅差だった。解約依頼の`no`対`yes`は0.0666、緊急度の`low`対`medium`は0.0536のlogit差。これらの差は正答確率ではない。特にセキュリティ報告の自動処理には使えない。
 

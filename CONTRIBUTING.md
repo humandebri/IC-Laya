@@ -14,4 +14,6 @@ For canister changes, also build the affected Wasm module with `tools/build_one.
 
 Do not commit pretrained weights, downloaded checkpoints, private keys, credentials, local canister state, or generated build output. The checked-in `fixtures/` contain random test weights. Keep measurements and compatibility claims tied to the exact input, model pack, and Wasm used.
 
+Generated files in `artifacts/` are ignored by default. The explicit allowlist in `.gitignore` retains fixed inputs, compact reference logits, final summaries, and explanatory Markdown. Keep detailed query traces, profiles, repeated measurements, downloaded proposal snapshots, and experimental source copies local; do not force-add them. Compact summaries should identify their inputs, model, Wasm, and source measurements by hash. Put ad hoc results in `artifacts/local/` or `build/`. The small `fixtures/tiny-*/model.bin` files remain versioned test inputs.
+
 By contributing, you agree that your contribution is licensed under the repository's [MIT License](LICENSE). Third-party code, models, and data require their own redistribution rights and attribution.

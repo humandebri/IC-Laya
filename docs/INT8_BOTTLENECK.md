@@ -17,10 +17,10 @@ pack bundle SHA-256 は
 - 選択肢とprefixを固定して本文だけ伸ばしたChoiceの単一updateも測定。
   入力長以外の文字列内容は同じではないため、長さに対する傾向の確認に使う。
 
-根拠: [38-tokenの詳細記録](../artifacts/int8_optimization_v3/profile-choice-38.json)、
-[128-tokenの詳細記録](../artifacts/int8_optimization_v3/profile-choice-128.json)、
-[128-tokenの再測定](../artifacts/int8_optimization_v3/profile-choice-128-repeat.json)、
-[通常実行](../artifacts/int8_optimization_v3/choice-128.json)。
+根拠: 38-tokenの詳細記録（ローカル生成物: `artifacts/int8_optimization_v3/profile-choice-38.json`）、
+128-tokenの詳細記録（ローカル生成物: `artifacts/int8_optimization_v3/profile-choice-128.json`）、
+128-tokenの再測定（ローカル生成物: `artifacts/int8_optimization_v3/profile-choice-128-repeat.json`）、
+通常実行（ローカル生成物: `artifacts/int8_optimization_v3/choice-128.json`）。
 
 ## 実モデルで費やした命令
 
@@ -61,10 +61,10 @@ encoderの各層は128-tokenで概ね1.46〜1.48B命令。最後の全行decisio
 | 112 tokens | 37.340B | 単一update |
 | 128 tokens | 42.842B | 2 update、16ステップずつ |
 
-根拠: [最短入力](../artifacts/int8_optimization_v3/shortest-choice-costs.json)、
-[38-token](../artifacts/int8_optimization_v3/choice-38.json)、
-[64/96/112-token](../artifacts/int8_optimization_v3/length-sweep.json)、
-[128-token](../artifacts/int8_optimization_v3/choice-128.json)。
+根拠: 最短入力（ローカル生成物: `artifacts/int8_optimization_v3/shortest-choice-costs.json`）、
+38-token（ローカル生成物: `artifacts/int8_optimization_v3/choice-38.json`）、
+64/96/112-token（ローカル生成物: `artifacts/int8_optimization_v3/length-sweep.json`）、
+128-token（ローカル生成物: `artifacts/int8_optimization_v3/choice-128.json`）。
 128-tokenだけ2 updateであり、表の差分を厳密な1-token当たり費用とは解釈しない。
 38→128 tokensでattention QK・softmax・AVの比率が5.3→12.2%に増える。
 
@@ -72,7 +72,7 @@ encoderの各層は128-tokenで概ね1.46〜1.48B命令。最後の全行decisio
 
 現行64行タイルの128-token合成ベンチでは、主な3形状のforward全体が
 それぞれ0.301B、0.510B、0.254B命令だった。
-[カーネル記録](../artifacts/int8_optimization_v3/current-components.json)。
+カーネル記録（ローカル生成物: `artifacts/int8_optimization_v3/current-components.json`）。
 同ファイルの `integer_dots` / `f32_writeback` 診断は **16行タイル・scalar書戻し**
 で計測する別実装であり、64行タイル・SIMD書戻しの正確な内訳ではない。
 その診断では整数積が92〜97%を占めるが、現行カーネルの比率としては使わない。

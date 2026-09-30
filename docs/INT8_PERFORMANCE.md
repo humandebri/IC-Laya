@@ -46,7 +46,7 @@ Noul（2選択肢）とScore（3選択肢）も85/88で成功し、86/87/89で40
 4-tokenタイルと端数処理の違いで命令数は単調増加しない。85までの測定成功も、
 任意の文章・選択肢数・APIの成功保証ではない。93〜95と97〜127はこの境界測定では未測定。
 長さ上限だけで成功を保証するには、選択肢数・タイル端数を含む追加検証と余裕が必要。
-根拠は [境界測定JSON](../artifacts/int8_update_limits.json)。各入力token列と成功命令数、
+根拠は 境界測定JSON（ローカル生成物: `artifacts/int8_update_limits.json`）。各入力token列と成功命令数、
 失敗時のIC0522、module/bundle hashを保存し、失敗を成功や推定値で補っていない。
 
 ```sh
@@ -91,7 +91,7 @@ Noul（2選択肢）とScore（3選択肢）も85/88で成功し、86/87/89で40
 によるローカル測定で、バッチ版Wasmでの
 単一update境界の再測定は未実施。上記3 updateの結果は新Wasmで確認した。mainnet実測は未実施。
 
-証跡: [45-token単一update](../artifacts/int8_tiled_noul_single.json)、
+証跡: 45-token単一update（ローカル生成物: `artifacts/int8_tiled_noul_single.json`）、
 [128-token分割update](../artifacts/int8_batched_choice-128.json)。
 
 ## 改善前の内訳

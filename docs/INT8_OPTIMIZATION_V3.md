@@ -25,10 +25,10 @@ packのbundle SHA-256は
 
 | 入力 | 基準 | 今回 | 削減 | 根拠 |
 |---|---:|---:|---:|---|
-| Choice 38 tokens | 13.338B | 12.459B | 6.59% | [JSON](../artifacts/int8_optimization_v3/choice-38.json) |
-| Noul 45 tokens | 15.881B | 14.857B | 6.45% | [JSON](../artifacts/int8_optimization_v3/noul-45.json) |
-| Score 37 tokens | 12.959B | 12.100B | 6.63% | [JSON](../artifacts/int8_optimization_v3/score-37.json) |
-| Choice 128 tokens | 45.578B | **42.842B** | **6.00%** | [JSON](../artifacts/int8_optimization_v3/choice-128.json) |
+| Choice 38 tokens | 13.338B | 12.459B | 6.59% | JSON（ローカル生成物: `artifacts/int8_optimization_v3/choice-38.json`） |
+| Noul 45 tokens | 15.881B | 14.857B | 6.45% | JSON（ローカル生成物: `artifacts/int8_optimization_v3/noul-45.json`） |
+| Score 37 tokens | 12.959B | 12.100B | 6.63% | JSON（ローカル生成物: `artifacts/int8_optimization_v3/score-37.json`） |
+| Choice 128 tokens | 45.578B | **42.842B** | **6.00%** | JSON（ローカル生成物: `artifacts/int8_optimization_v3/choice-128.json`） |
 
 4入力とも以前のcanisterのserialized logitsと完全一致した。128-tokenは
 23.389B＋19.452B命令の**2 update**で完走した。ローカルのwall timeは
@@ -36,11 +36,11 @@ packのbundle SHA-256は
 
 128-token Choiceで、RoPE再利用とmarker計算を追加した16行タイルは44.261B、
 32行タイルは43.404B、採用した64行タイルは42.842Bだった。
-[16行](../artifacts/int8_optimization_v3/tile16-128.json)・
-[32行](../artifacts/int8_optimization_v3/tile32-128.json)・
-[64行](../artifacts/int8_optimization_v3/choice-128.json)。
+16行（ローカル生成物: `artifacts/int8_optimization_v3/tile16-128.json`）・
+32行（ローカル生成物: `artifacts/int8_optimization_v3/tile32-128.json`）・
+64行（ローカル生成物: `artifacts/int8_optimization_v3/choice-128.json`）。
 各候補のpack/input hashとlogitsは同じ。
-[128行×8出力の不採用結果](../artifacts/int8_optimization_v3/tile128x8-128.json)。
+128行×8出力の不採用結果（ローカル生成物: `artifacts/int8_optimization_v3/tile128x8-128.json`）。
 
 ## 呼出し境界とquery
 
@@ -48,11 +48,11 @@ Choiceの質問・選択肢を固定して本文tokenだけを調整した単一
 113〜118 tokensが成功し、119〜128 tokensは40B命令上限で失敗した。
 最大成功実測は**118 tokens、39.950B命令**。残り約0.05Bしかないため、
 任意の118-token入力に対する成功保証ではない。
-[境界測定](../artifacts/int8_optimization_v3/update-limits.json)。
+境界測定（ローカル生成物: `artifacts/int8_optimization_v3/update-limits.json`）。
 
 同じChoice schemaではprefixが26 tokensあり、本文1 tokenと終端SEPを加えた
 最短の有効入力は28 tokens。この入力でも**9.301B命令**だった。
-[短い入力の測定](../artifacts/int8_optimization_v3/shortest-choice-costs.json)。
+短い入力の測定（ローカル生成物: `artifacts/int8_optimization_v3/shortest-choice-costs.json`）。
 ICPのquery上限5Bには届かない。現APIも推論はupdateのみである。
 この結果は当該schema・packでの測定であり、他のschemaの最短値ではない。
 
@@ -62,8 +62,8 @@ ICPのquery上限5Bには届かない。現APIも推論はupdateのみである�
 - `laya-candle`のfixtureテスト12件、Candle有効の`decision-engine`テスト3件に成功。
 - 実Wasmの整数参照760件、量子化144件、F32書戻し216件に成功。
 - 128-token継続推論の再送、入力衝突、権限、完了状態保持を検査。
-  [検証記録](../artifacts/int8_optimization_v3/validation.json)・
-  [プロトコル結果](../artifacts/int8_optimization_v3/protocol.json)。
+  検証記録（ローカル生成物: `artifacts/int8_optimization_v3/validation.json`）・
+  プロトコル結果（ローカル生成物: `artifacts/int8_optimization_v3/protocol.json`）。
 
 測定対象はowner専用raw-token推論。実務データの正答率、`evaluate`とexecutor経路、
 mainnetの時間・費用・成功率はこの測定からは確定しない。
