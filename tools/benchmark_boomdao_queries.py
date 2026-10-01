@@ -14,7 +14,7 @@ from canister_infer import Icp, ROOT, decode_blobs, require_local_network
 from check_practical_laya import make_input
 from client_held_query import QuerySession
 from measure_inference import Failure
-from sns_proposal_triage import API, _load_proposal, _laya_context, triage
+from sns_proposal_triage import API, _load_proposal, _legacy_laya_context, triage
 
 SNS_ROOT = "xjngq-yaaaa-aaaaq-aabha-cai"
 
@@ -68,7 +68,7 @@ def main():
         result = triage(proposal)
         row = dict(proposal_id=number, source_url=f"{API}/{SNS_ROOT}/proposals/{number}",
                    snapshot_sha256=sha(raw), triage=result)
-        context = _laya_context(proposal, result)
+        context = _legacy_laya_context(proposal, result)
         if context is None:
             row["model_status"] = "not_applicable_to_existing_prompt"
         else:

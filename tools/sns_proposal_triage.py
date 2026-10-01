@@ -7,6 +7,7 @@ Optional Laya inference is supplementary and never changes that decision.
 
 import argparse
 import json
+import math
 import re
 import subprocess
 import tempfile
@@ -130,7 +131,8 @@ def _load_proposal(args):
     return json.loads(raw)
 
 
-def _laya_context(proposal, result):
+def _legacy_laya_context(proposal, result):
+    """Frozen prompts for reproducing the historical three-proposal benchmark."""
     action = result["action_type"]
     if action == "ManageNervousSystemParameters":
         question = "Could this change reduce voter participation or concentrate voting power?"
@@ -157,30 +159,114 @@ def _laya_context(proposal, result):
     return question, ("unlikely", "possible", "likely"), state
 
 
-def laya_advisory(proposal, result, pack, binary):
-    context = _laya_context(proposal, result)
-    if context is None:
-        return {"status": "not_applicable"}
-    from tokenizers import Tokenizer
-    from check_practical_laya import make_input
+def _laya_contexts(proposal, result):
+    """Keep each proposed field as evidence, including missing historical values."""
+    action = result["action_type"]
+    payload = proposal.get("proposal_action_payload")
+    if not isinstance(payload, dict):
+        return []
+    contexts = []
+    if action == "ManageNervousSystemParameters":
+        for field, new in sorted(payload.items()):
+            if new is None:
+                continue
+            old = _current_parameter(proposal.get("payload_text_rendering"), field)
+            fact = dict(field=field, old=old, new=new,
+                        historical_value_available=old is not None)
+            context = dict(fact=fact, options=("unlikely", "possible", "likely"))
+            if old == new:
+                context.update(status="unchanged")
+            elif field == "neuron_minimum_dissolve_delay_to_vote_seconds":
+                context.update(status="ready",
+                    question="Could this change restrict voting eligibility?",
+                    state=("A neuron can vote only if its dissolve delay meets the minimum. "
+                           f"Minimum voting dissolve delay: {old if old is not None else 'unknown'} to {new} seconds. "
+                           "Neurons below the minimum cannot vote unless they increase their delay. "
+                           "The distribution of current neuron delays is unknown."))
+            elif field == "max_dissolve_delay_seconds":
+                context.update(status="ready",
+                    question="Could this change encourage longer token lock periods?",
+                    state=("The dissolve delay bonus reaches its maximum at the maximum dissolve delay. "
+                           f"Maximum dissolve delay: {old if old is not None else 'unknown'} to {new} seconds. "
+                           "This is a maximum, not the minimum required to vote. "
+                           "Current neuron delays and actual voter behavior are unknown."))
+            elif field == "neuron_minimum_stake_e8s":
+                context.update(status="ready",
+                    question="Could this change restrict who can create a neuron?",
+                    state=("The minimum neuron stake sets the tokens needed to create a neuron. "
+                           f"Minimum stake: {old if old is not None else 'unknown'} to {new} e8s. "
+                           "One token equals 100000000 e8s. Current holder balances are unknown."))
+            else:
+                context.update(status="unsupported",
+                               reason="no supported question for this parameter")
+            contexts.append(context)
+    elif action == "MintSnsTokens":
+        amount = payload.get("amount_e8s")
+        fact = dict(field="token_mint", amount_e8s=amount,
+                    recipient=payload.get("to_principal"), subaccount=payload.get("to_subaccount"),
+                    supply_before=None, recipient_holdings_before=None)
+        context = dict(fact=fact, options=("unlikely", "possible", "likely"))
+        if not _positive_int(amount):
+            context.update(status="unavailable", reason="mint amount is unavailable")
+        else:
+            context.update(status="ready",
+                question="Could this token mint concentrate token control?",
+                state=(f"Mint {_tokens(amount)} new tokens to one specified account. "
+                       "Total token supply, recipient holdings and recipient control before minting are unknown. "
+                       "The supply share received cannot be calculated from these facts."))
+        contexts.append(context)
+    return contexts
 
-    question, options, state = context
-    tokenizer = Tokenizer.from_file(str(pack / "tokenizer.json"))
-    model_input = make_input(tokenizer, "choice", question, options, state)
-    if len(model_input["input_ids"]) > 128:
-        return {"status": "unavailable", "reason": "input exceeds 128 tokens"}
+
+def laya_advisory(proposal, result, pack, binary):
+    contexts = _laya_contexts(proposal, result)
+    if not contexts:
+        return {"status": "not_applicable", "assessments": []}
+    ready = any(c["status"] == "ready" for c in contexts)
+    assessments = []
+    tokenizer = None
+    if ready:
+        try:
+            from tokenizers import Tokenizer
+            from check_practical_laya import make_input
+            tokenizer = Tokenizer.from_file(str(pack / "tokenizer.json"))
+        except Exception as exc:
+            # Retain all evidence/coverage even when the optional model cannot load.
+            assessments = [dict(c, status="unavailable", reason=str(exc))
+                           if c["status"] == "ready" else dict(c) for c in contexts]
+            return {"status": "unavailable", "assessments": assessments,
+                    "coverage_complete": False, "aggregate_label": None}
     with tempfile.TemporaryDirectory(prefix="laya-sns-triage-") as directory:
-        path = Path(directory) / "input.json"
-        path.write_text(json.dumps(model_input))
-        output = subprocess.check_output([str(binary), str(pack), str(path)], text=True)
-    inference = json.loads(output)
-    logits = inference["raw_logits"]
-    if len(logits) != len(options):
-        raise ValueError("Laya returned an unexpected number of logits")
-    return {"status": "ok", "question": question, "state": state,
-            "label": options[max(range(len(logits)), key=logits.__getitem__)],
-            "raw_logits": dict(zip(options, logits)), "model_bundle": inference["bundle"],
-            "note": "uncalibrated supplementary classification; does not change priority"}
+        for index, context in enumerate(contexts):
+            row = dict(context)
+            if context["status"] != "ready":
+                assessments.append(row)
+                continue
+            options = context["options"]
+            inp = make_input(tokenizer, "choice", context["question"], options, context["state"])
+            row["input_tokens"] = len(inp["input_ids"])
+            if row["input_tokens"] > 128:
+                row.update(status="unavailable", reason="input exceeds 128 tokens; evidence was not truncated")
+            else:
+                path = Path(directory) / f"input-{index}.json"
+                path.write_text(json.dumps(inp))
+                try:
+                    inference = json.loads(subprocess.check_output(
+                        [str(binary), str(pack), str(path)], text=True, timeout=120))
+                    logits = inference["raw_logits"]
+                    if len(logits) != len(options) or any(not math.isfinite(v) for v in logits):
+                        raise ValueError("Laya returned invalid logits")
+                    row.update(status="ok", label=options[max(range(len(logits)), key=logits.__getitem__)],
+                               raw_logits=dict(zip(options, logits)), model_bundle=inference["bundle"])
+                except (OSError, ValueError, KeyError, TypeError, subprocess.SubprocessError) as exc:
+                    row.update(status="unavailable", reason=str(exc))
+            assessments.append(row)
+    scored = [c for c in assessments if c["status"] == "ok"]
+    complete = all(c["status"] in ("ok", "unchanged") for c in assessments)
+    return {"status": "ok" if complete else "partial" if scored else "unavailable",
+            "assessments": assessments, "coverage_complete": complete,
+            "aggregate_label": None,
+            "note": "per-field uncalibrated advisory; no proposal-wide probability; does not change priority"}
 
 
 def main():
