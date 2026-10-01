@@ -9,7 +9,19 @@ import tempfile
 import time
 
 from measure_inference import Failure
-from query_transport import AUTO_BUNDLE, auto_width, unpack_state
+from query_transport import AUTO_BUNDLE, auto_width, inspect_state
+
+
+def transient_failure(error):
+    if isinstance(error, subprocess.TimeoutExpired):
+        return True
+    message = str(error).lower()
+    statuses = re.findall(r"\b(?:status(?:\s+code)?|http(?:\s+error)?)\s*[:=]?\s*(\d{3})\b", message)
+    if statuses:
+        return all(int(status) in (429, 502, 503, 504) for status in statuses)
+    return any(value in message for value in
+               ("transport", "timed out", "connection refused", "connection reset",
+                "error sending request", "temporarily unavailable"))
 
 
 def uleb(value):
@@ -94,8 +106,8 @@ def decode_progress(reply):
         if len(blobs) != 1:
             raise Failure("expected exactly one continuation blob")
         result["state"] = blobs[0]
-        raw = unpack_state(blobs[0])
-        result["raw_state_bytes"] = len(raw)
+        raw, raw_size = inspect_state(blobs[0])
+        result["raw_state_bytes"] = raw_size
         if len(raw) < 60 or raw[:4] not in (b"LAYQ", b"LAYI"):
             raise Failure("invalid continuation header")
         version, revision = struct.unpack_from("<II", raw, 4)
@@ -177,9 +189,7 @@ class QuerySession:
                         payload = encode_input(self.inp, self.steps) if beginning else encode_continue(self.progress["state"], self.steps)
                         path.write_bytes(payload)
                         continue
-                    transient = isinstance(error, subprocess.TimeoutExpired) or any(v in message for v in
-                        ("transport", "timed out", "connection refused", "connection reset", "error sending request", "temporarily unavailable"))
-                    if not transient or attempts >= self.retries:
+                    if not transient_failure(error) or attempts >= self.retries:
                         raise
                     attempts += 1
                     time.sleep(0.25 * attempts)

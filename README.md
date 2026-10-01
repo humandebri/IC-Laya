@@ -22,7 +22,7 @@ The raw inference APIs return logits. Resumable inference is not connected to th
 .venv/bin/python tools/sns_proposal_triage.py --input proposal.json --with-laya
 ```
 
-The optional `--with-laya` result is an uncalibrated classifier label. Laya cannot generate a written rationale, and its label never changes the numeric review priority. If the historical values cannot be read, the tool asks for review instead of assuming the change is small.
+The optional `--with-laya` result contains per-field uncalibrated assessments in `laya.assessments`. Each proposed field retains its evidence and an explicit status: `ok`, `unchanged`, `unsupported`, or `unavailable`. `coverage_complete` reports whether all fields were handled; no proposal-wide probability or aggregate label is inferred. Laya cannot generate a written rationale, and its labels never change the numeric review priority. If the historical values cannot be read, the tool asks for review instead of assuming the change is small. The historical BOOM DAO benchmark retains its original prompts for comparable measurements. See [query client review fixes](docs/QUERY_CLIENT_REVIEW_FIXES.md) for the updated transport tiers and advisory output.
 
 ## Quick start
 

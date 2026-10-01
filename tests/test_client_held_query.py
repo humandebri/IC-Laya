@@ -2,13 +2,14 @@ import struct
 import sys
 from pathlib import Path
 import unittest
+from unittest.mock import patch
 import zlib
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from client_held_query import QuerySession, decode_progress, encode_input, encode_continue
 from measure_inference import Failure, blob
 from profile_quantized_queries import unwrap_progress
-from query_transport import AUTO_BUNDLE, MAX_STATE_BYTES, auto_width, unpack_state
+from query_transport import AUTO_BUNDLE, MAX_STATE_BYTES, auto_width, unpack_state, inspect_state
 
 
 def progress(state=None, step=0, done=False):
@@ -42,6 +43,56 @@ class FakeIcp:
 
 
 class ClientHeldQueryTests(unittest.TestCase):
+    def test_http_failures_retry_identical_bytes_and_remain_bounded(self):
+        for status in (429, 502, 503, 504):
+            class HttpOnce(FakeIcp):
+                def __init__(self):
+                    super().__init__(); self.failed = False
+                def run(self, args):
+                    if self.calls == 1 and not self.failed:
+                        self.failed = True
+                        self.payloads.append(Path(args[args.index("--args-file") + 1]).read_bytes())
+                        raise Failure(f"HTTP Error: status: {status} Service Unavailable")
+                    return super().run(args)
+            icp = HttpOnce()
+            with patch("client_held_query.time.sleep"):
+                result = QuerySession(icp, dict(input_ids=[1,3,3,2], markers=[1,2], qtype_id=0)).finish()
+            self.assertEqual(icp.payloads[1], icp.payloads[2])
+            self.assertEqual(len(result["failed_query_attempts"]), 1)
+        class AlwaysHttp(FakeIcp):
+            def run(self, args):
+                self.payloads.append(Path(args[args.index("--args-file") + 1]).read_bytes())
+                raise Failure("HTTP 503 Service Unavailable")
+        icp = AlwaysHttp()
+        with patch("client_held_query.time.sleep"), self.assertRaises(Failure):
+            QuerySession(icp, dict(input_ids=[1,3,3,2], markers=[1,2], qtype_id=0), retries=2).finish()
+        self.assertEqual(len(icp.payloads), 3)
+        self.assertTrue(all(p == icp.payloads[0] for p in icp.payloads))
+
+    def test_permanent_http_error_does_not_retry_even_if_message_mentions_transport(self):
+        class BadRequest(FakeIcp):
+            def run(self, args):
+                self.calls += 1
+                raise Failure("transport HTTP Error: status code: 400 Bad Request")
+        icp = BadRequest()
+        with self.assertRaises(Failure):
+            QuerySession(icp, dict(input_ids=[1,3,3,2], markers=[1,2], qtype_id=0)).finish()
+        self.assertEqual(icp.calls, 1)
+
+    def test_metadata_validates_entire_large_stream_without_unshuffling(self):
+        raw = state(0)[:60] + b"\0" * (4 * 6 + 4 * 20000)
+        offset = 60 + 4 * 6
+        shuffled = raw[:offset] + b"".join(raw[offset+i::4] for i in range(4))
+        wire = b"LAYZ" + struct.pack("<III", 1, 2, len(raw)) + zlib.compress(shuffled)
+        self.assertEqual(inspect_state(wire), (raw[:60], len(raw)))
+        with patch("query_transport.unpack_state", side_effect=AssertionError("full unpack called")):
+            self.assertEqual(decode_progress(progress(wire))["state"], wire)
+        corrupt = wire[:-1] + bytes([wire[-1] ^ 1])
+        for broken in (corrupt, wire[:-1], wire+b"x",
+                       wire[:12]+struct.pack("<I",len(raw)-1)+wire[16:],
+                       wire[:12]+struct.pack("<I",MAX_STATE_BYTES+1)+wire[16:]):
+            with self.assertRaises(Failure): inspect_state(broken)
+
     def test_fused_begin_completes_128_tokens_in_ten_queries(self):
         class Batched(FakeIcp):
             def __init__(self):
@@ -101,7 +152,10 @@ class ClientHeldQueryTests(unittest.TestCase):
         self.assertEqual(unpack_state(wire), raw)
 
     def test_auto_widths_include_light_tail_without_excessive_encoder_batch(self):
-        for tokens, mode, expected in [(128,"f32",3),(128,"int8",3),(65,"int8",6),(43,"int8",8)]:
+        for tokens, mode, expected in [(128,"f32",3),(128,"int8",3),(65,"int8",6),(43,"int8",8),
+                                       (66,"f32",6),(72,"f32",6),(73,"f32",4),(96,"f32",4),
+                                       (97,"f32",3),(66,"int8",5),(72,"int8",5),(73,"int8",4),
+                                       (90,"int8",4),(91,"int8",3)]:
             self.assertEqual(auto_width(tokens,mode,0),expected)
         self.assertEqual(auto_width(128,"int8",27),5)
         self.assertEqual(auto_width(128,"int8",26,2),2)
