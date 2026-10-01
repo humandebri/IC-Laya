@@ -1,6 +1,6 @@
 # Laya raw queryの16-token境界
 
-2026-09-25に、現行packのtokenizerとlocal canisterで短い入力を確認した。[入力とupdate実測](../artifacts/int8_optimization_v4/short-inputs.json)、[同じWasmでのupdate/query比較](../artifacts/int8_optimization_v4/short-query-results.json)にtoken ID、Wasm・pack hash、logits、命令数を保存した。
+2026-09-25に、現行packのtokenizerとlocal canisterで短い入力を確認した。[入力とupdate実測](../artifacts/int8_optimization_v4/short-inputs.json)、同じWasmでのupdate/query比較（ローカル生成物: `artifacts/int8_optimization_v4/short-query-results.json`）にtoken ID、Wasm・pack hash、logits、命令数を保存した。
 
 現行packのowner専用`infer_tokens_query`は、タスクの文章やschema名に関係なく**合計16 tokensまで**受け付ける。17 tokens以上は推論前に`TooLong`を返す。通常のupdate推論にはこの短入力制限を加えていない。
 
@@ -20,8 +20,8 @@
 
 ## タスク非依存のquery受付境界
 
-現行packで、15・16・17 tokens、マーカー2〜7個、qtype全3種を組み合わせた54条件を[updateで測定](../artifacts/int8_optimization_v4/query-limit-grid.json)した。16 tokensの最大は**4,757,429,998命令**、17 tokensの最小は**5,157,045,105命令**。ガード追加後の実queryでも16 tokensの18条件がすべて成功し、最大**4,756,310,000命令**だった。17 tokensの18条件と128 tokensはすべて推論前に`TooLong`となり、17-token入力はupdateでは成功した（[ガード検証](../artifacts/int8_optimization_v4/query-guard-check.json)）。したがって現行packに対するquery受付は**最大16 tokens、17 tokens以上は拒否**とした。別packへの交換時はガードが`BindingMismatch`で拒否し、別途再測定を求める。
+現行packで、15・16・17 tokens、マーカー2〜7個、qtype全3種を組み合わせた54条件を[updateで測定](../artifacts/int8_optimization_v4/query-limit-grid.json)した。16 tokensの最大は**4,757,429,998命令**、17 tokensの最小は**5,157,045,105命令**。ガード追加後の実queryでも16 tokensの18条件がすべて成功し、最大**4,756,310,000命令**だった。17 tokensの18条件と128 tokensはすべて推論前に`TooLong`となり、17-token入力はupdateでは成功した（ガード検証（ローカル生成物: `artifacts/int8_optimization_v4/query-guard-check.json`））。したがって現行packに対するquery受付は**最大16 tokens、17 tokens以上は拒否**とした。別packへの交換時はガードが`BindingMismatch`で拒否し、別途再測定を求める。
 
-この境界は測定したWasm・packに対するもので、全ての将来のコードやモデルに対する数学的上界ではない。短入力の選択肢マーカー数やqtypeをまたぐ実測の最悪値には約244M命令の余裕がある。ガード付きWasmでも[元の96入力との互換性](../artifacts/int8_optimization_v4/guarded-query-vs-baseline-canister.json)と、[128-token通常updateの継続](../artifacts/int8_optimization_v4/guarded-query-update-limits.json)を確認した。
+この境界は測定したWasm・packに対するもので、全ての将来のコードやモデルに対する数学的上界ではない。短入力の選択肢マーカー数やqtypeをまたぐ実測の最悪値には約244M命令の余裕がある。ガード付きWasmでも元の96入力との互換性（ローカル生成物: `artifacts/int8_optimization_v4/guarded-query-vs-baseline-canister.json`）と、128-token通常updateの継続（ローカル生成物: `artifacts/int8_optimization_v4/guarded-query-update-limits.json`）を確認した。
 
 **短縮の主な懸念は意味の欠落である。** 「Choose.」「Safe?」は費用測定には使えても、元の質問文や判断条件を表せない。「Color?」はこの例の選択肢を指すが、一般の判断ルールを表す余地は小さい。実際、同じstate「yes」と選択肢no・yesでも、質問「Safe?」はyes、「Is this safe?」はnoを選んだ。どちらが正しいかは、この例だけでは判定できない。schemaのinstructionsやoptionsを変えるとschema hashが変わるため、既存の登録をそのまま流用せず、versionを更新して再登録する必要がある。本文を短くすると判断材料も減る。これら5入力には正解ラベルや品質評価がなく、短入力の正答率は不明。queryを使える長さはschema、本文、選択肢数、実際のWasm次第なので、実運用では入力ごとの予算超過時にupdateへ切り替える設計が必要になる。

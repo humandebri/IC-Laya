@@ -1,0 +1,45 @@
+{
+  "module_hash": "0x84d7dfd1ffcf72467cc6af309a80585ea658387e4f2772c8f2937114c409c5d5",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "corpus_sha256": "aa75a7c811ab4a5698dcb6d8fc9d65440889bf0a98d3ff59bf6f8ae279b3370f",
+  "measured_at": "2026-09-30T07:51:01.205857+00:00",
+  "payload_scope": "successful Candid requests + continuation blobs; failed attempt requests counted separately",
+  "cases": 100,
+  "logits_exact_against_previous_version": true,
+  "compressed_raw_logits_exact": true,
+  "failed_query_attempts": 0,
+  "max_observed_query_handler_instructions": 4753940497,
+  "instruction_scope": "handler only; excludes CDK argument decoding and reply encoding",
+  "tests": {
+    "python": 82,
+    "candle_canister": 9,
+    "workspace_locked": "passed"
+  },
+  "pilot_128": {
+    "f32": {
+      "old_calls": 11,
+      "new_calls": 10,
+      "first_query_instructions": 4196677937,
+      "total_instructions": 41662071384,
+      "old_total_instructions": 41817971224,
+      "payload_bytes": 8159158,
+      "old_payload_bytes": 8386314
+    },
+    "int8": {
+      "old_calls": 11,
+      "new_calls": 10,
+      "first_query_instructions": 4350567344,
+      "total_instructions": 42565971134,
+      "old_total_instructions": 42585022903,
+      "payload_bytes": 1337990,
+      "old_payload_bytes": 1383150
+    }
+  },
+  "source_sha256": {
+    "canisters/decision-engine/src/lib.rs": "9468dd11b9fca7abd1a7400d61d638dfb04d524dd8a4dc0cf77008114ce39c2f",
+    "canisters/decision-engine/src/client_query_tests.rs": "8e827748b3a18f421e95f7165917402e50554998d8115069f6abb05515d92e0f",
+    "tools/client_held_query.py": "af94e86a57982a99fe6a1835423f1e3ed2ccd4d5528f198529439a024d87c95a",
+    "tools/check_query_transport_protocol.py": "dc55d5e47a9f374008a4259d7b1dca57aca6a6930180704453b502ecd887ca7b",
+    "Cargo.lock": "fd46e4240121cf8a7050394bcb796f7cb28d974364b9d3267f8b7b6526f46b32"
+  }
+}

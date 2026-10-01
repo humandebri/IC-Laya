@@ -217,7 +217,11 @@ def main():
     parser.add_argument("--pack", type=Path, help="upload and warm this pack before inference")
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--profile", action="store_true", help="record detailed spans for each step")
+    parser.add_argument("--query-int8", action="store_true", help="experimental INT8 activation engine; requires --query-stepped")
     parser.add_argument("--stepped", action="store_true", help="resumable inference, up to 16 phases per update")
+    parser.add_argument("--query-stepped", action="store_true", help="independent queries; continuation state stays on the client")
+    parser.add_argument("--query-steps-per-call", type=int, choices=range(1,17), help="fixed phases per query; omit for input-aware grouping")
+    parser.add_argument("--query-compression", choices=("auto", "none"), default="auto", help="lossless query state compression (default: auto)")
     parser.add_argument("--steps-per-call", type=int, choices=range(1,17), default=16, help="batch size for --stepped; --profile always uses 1")
     parser.add_argument("--max-update-instructions", type=int,
                         help="empirical per-update budget; auto-select direct or split for the calibrated Wasm and pack")
@@ -225,8 +229,17 @@ def main():
     parser.add_argument("--initialize", action="store_true", help="create and install a fresh local canister")
     parser.add_argument("--request-id", help="32-byte hex ID for retrying the current combined-start job")
     parser.add_argument("--identity", default="ic-laya-int8")
+    parser.add_argument("--project-root", type=Path, default=ROOT, help="local icp project to use (default: repository root)")
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
+    if args.query_int8 and not args.query_stepped:
+        parser.error("--query-int8 requires --query-stepped")
+    if args.query_stepped and (args.stepped or args.profile or args.max_update_instructions is not None or args.request_id or args.steps_per_call != 16):
+        parser.error("--query-stepped cannot be combined with update inference options")
+    if not args.query_stepped and args.query_steps_per_call is not None:
+        parser.error("--query-steps-per-call requires --query-stepped")
+    if not args.query_stepped and args.query_compression != "auto":
+        parser.error("--query-compression requires --query-stepped")
     if args.max_update_instructions is not None and (args.stepped or args.profile or args.steps_per_call != 16):
         parser.error("--max-update-instructions selects the inference route; omit --stepped, --profile and --steps-per-call")
     if args.max_update_instructions is not None and args.pack:
@@ -235,7 +248,7 @@ def main():
     if args.max_update_instructions is not None and args.initialize:
         if "0x" + hashlib.sha256((BUILD / "decision-engine.wasm").read_bytes()).hexdigest() != MODULE_HASH:
             raise Failure("budget calibration does not match the Wasm to install")
-    icp = Icp(ROOT, "local", args.identity)
+    icp = Icp(args.project_root.resolve(), "local", args.identity)
     require_local_network(icp)
     if network_status(icp) is None:
         raise Failure("start this project's local network first")
@@ -264,12 +277,17 @@ def main():
             raise Failure("--request-id requires split inference with at least 2 steps per call")
         print(f"budget route: {plan.mode}, estimate={plan.estimated_direct_instructions:,}, "
               f"per-update budget={plan.effective_budget:,}, steps={plan.steps_per_call}", flush=True)
-    result = infer(icp, args.input,
-                   stepped=plan.mode == "stepped" if plan else (args.stepped or args.profile),
-                   profile=args.profile,
-                   steps_per_call=plan.steps_per_call if plan and plan.steps_per_call else args.steps_per_call,
-                   request_id=args.request_id,
-                   max_update_instructions=plan.effective_budget if plan else None)
+    if args.query_stepped:
+        from client_held_query import infer_queries
+        query_before = json.loads(icp.run(["canister", "status", "decision-engine", "-e", "local", "--json"]))
+        result = infer_queries(icp, args.input, args.query_steps_per_call, "int8" if args.query_int8 else "f32", args.query_compression)
+    else:
+        result = infer(icp, args.input,
+                       stepped=plan.mode == "stepped" if plan else (args.stepped or args.profile),
+                       profile=args.profile,
+                       steps_per_call=plan.steps_per_call if plan and plan.steps_per_call else args.steps_per_call,
+                       request_id=args.request_id,
+                       max_update_instructions=plan.effective_budget if plan else None)
     status = json.loads(icp.run(["canister", "status", "decision-engine", "-e", "local", "--json"]))
     result.update(network="local", measured_at=datetime.now(timezone.utc).isoformat(),
                   canister=status["id"], module_hash=status["module_hash"],
@@ -278,6 +296,9 @@ def main():
     active = decode_blobs(icp.query("decision-engine", "info"))
     if len(active) != 1 or len(active[0]) != 32:
         raise Failure("invalid active bundle response")
+    if args.query_stepped and (status["module_hash"] != query_before["module_hash"] or
+                              result["bundle_sha256"] != active[0].hex()):
+        raise Failure("installed Wasm or pack changed during query inference")
     result["bundle_sha256"] = active[0].hex()
     if plan:
         if status["module_hash"] != before["module_hash"] or result["bundle_sha256"] != active_before[0].hex():

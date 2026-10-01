@@ -11,7 +11,7 @@ python3 tools/canister_infer.py \
 
 対象はWasm `0xdd7013df97f0b2b039540cb94888aebd7239efe085d53935601f6206236d1b49`、pack `bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092`。両hashを実行前に照合し、どちらかが異なれば予算付き実行を拒否する。入力は1〜128 tokens、選択肢マーカー2〜7個、qtype 0〜2に限る。
 
-単一updateの推定式は`1.2B + 0.31B × tokens`。既存96入力と実用例16入力のすべての実測を上回る値として選んだ。指定予算が35Bより大きくても、振り分けには35Bを上限として使う。分割幅の予算閾値は[現行128-tokenの1ステップ計測](../artifacts/int8_optimization_v4/budget-profile-choice-128.json)から設定した。各幅の測定最大値と採用閾値は次の通り。
+単一updateの推定式は`1.2B + 0.31B × tokens`。既存96入力と実用例16入力のすべての実測を上回る値として選んだ。指定予算が35Bより大きくても、振り分けには35Bを上限として使う。分割幅の予算閾値は現行128-tokenの1ステップ計測（ローカル生成物: `artifacts/int8_optimization_v4/budget-profile-choice-128.json`）から設定した。各幅の測定最大値と採用閾値は次の通り。
 
 | ステップ/update | 測定最大 | 採用閾値 |
 |---:|---:|---:|
@@ -29,9 +29,9 @@ python3 tools/canister_infer.py \
 
 | 入力・予算 | 経路 | update回数 | 最大1回の計測値 | logits |
 |---|---|---:|---:|---|
-| [103 tokens、35B](../artifacts/int8_optimization_v4/budget-direct-103.json) | 単一 | 1 | 31.609B | 前回の単一updateと一致 |
-| [128 tokens、35B](../artifacts/int8_optimization_v4/budget-split-128-35b.json) | 16ステップずつ | 2 | 21.442B | 下行と一致 |
-| [128 tokens、20B](../artifacts/int8_optimization_v4/budget-split-128-20b.json) | 8ステップずつ | 4 | 10.769B | 上行と一致 |
-| [128 tokens、2B](../artifacts/int8_optimization_v4/budget-split-128-2b.json) | 1ステップずつ | 33 | 1.358B | 上行と一致 |
+| 103 tokens、35B（ローカル生成物: `artifacts/int8_optimization_v4/budget-direct-103.json`） | 単一 | 1 | 31.609B | 前回の単一updateと一致 |
+| 128 tokens、35B（ローカル生成物: `artifacts/int8_optimization_v4/budget-split-128-35b.json`） | 16ステップずつ | 2 | 21.442B | 下行と一致 |
+| 128 tokens、20B（ローカル生成物: `artifacts/int8_optimization_v4/budget-split-128-20b.json`） | 8ステップずつ | 4 | 10.769B | 上行と一致 |
+| 128 tokens、2B（ローカル生成物: `artifacts/int8_optimization_v4/budget-split-128-2b.json`） | 1ステップずつ | 33 | 1.358B | 上行と一致 |
 
 予算を指定しない既存CLIの直接・`--stepped`・`--profile`の動作は変更していない。予算指定時は振り分けが分割幅を決めるため、これらの手動指定と同時には使えない。

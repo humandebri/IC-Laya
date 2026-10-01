@@ -1,0 +1,48 @@
+{
+  "module_hash": "0xe21d3ae54de974072fa401be39cbe99d2e07b8daf01e37477764aa4135653657",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "network": "local",
+  "candidate_configurations_measured": 5,
+  "selected_candidate": "norm-simd-reuse with 64-row Linear tiles",
+  "complete_cases": 96,
+  "q8_optimization_max_abs_logit_difference": 0.0,
+  "f32_reference_max_abs_logit_difference": 0.0,
+  "f32_q8_decision_agreements": 88,
+  "f32_q8_decision_disagreements": [
+    "choice-natural-03",
+    "choice-natural-11",
+    "choice-natural-23",
+    "choice-boundary-35",
+    "choice-boundary-96",
+    "score-natural-07",
+    "score-boundary-96",
+    "score-boundary-112"
+  ],
+  "median_instructions": {
+    "f32": 39396527412,
+    "int8": 42129893539
+  },
+  "prior_median_instructions": {
+    "f32": 39544344114,
+    "int8": 47209698416
+  },
+  "int8_instruction_reduction_128_percent": 10.760087540144902,
+  "int8_vs_current_f32_instruction_increase_percent": 6.93808898031818,
+  "corpus_instruction_reduction_percent": {
+    "minimum": 7.920906119304405,
+    "median": 8.615917504442073,
+    "maximum": 10.75916459944909
+  },
+  "communication_bytes": {
+    "f32": 16796736,
+    "int8": 4230208
+  },
+  "communication_reduction_percent": 74.81529744826614,
+  "max_query_handler_instructions": 3138344891,
+  "labeled_accuracy_measured": false,
+  "query_cache_controlled": false,
+  "instruction_scope": "handler; CDK decoding/reply encoding excluded",
+  "fixed_scale_enabled": false,
+  "q31_enabled": false,
+  "approximate_activations_added": false
+}

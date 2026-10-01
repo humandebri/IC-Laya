@@ -14,9 +14,9 @@
 
 上表のWasmはINT8採用版（query診断API追加前）。追加後のWasmも下記で別途再検証した。
 
-128-tokenの現行比較用測定は[baseline-corpus-choice-128.json](../artifacts/int8_optimization_v4/baseline-corpus-choice-128.json)、採用版は[final-choice-128.json](../artifacts/int8_optimization_v4/final-choice-128.json)。以前のV3記録42,841,802,273命令との差42,121命令はベンチ用APIを追加したWasmの差であり、上表では同じV4比較用Wasmで再測定した値を使用した。pack SHA-256は両方とも`bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092`。
+128-tokenの現行比較用測定はbaseline-corpus-choice-128.json（ローカル生成物: `artifacts/int8_optimization_v4/baseline-corpus-choice-128.json`）、採用版はfinal-choice-128.json（ローカル生成物: `artifacts/int8_optimization_v4/final-choice-128.json`）。以前のV3記録42,841,802,273命令との差42,121命令はベンチ用APIを追加したWasmの差であり、上表では同じV4比較用Wasmで再測定した値を使用した。pack SHA-256は両方とも`bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092`。
 
-10%削減の目標には届かなかったが、採用条件の1%以上を満たした。96入力の命令数はすべて改善し、削減率の範囲は**8.303〜8.805%**、中央値は**8.709%**。[実canister比較の全件データ](../artifacts/int8_optimization_v4/final-vs-baseline-canister.json)に、入力・Wasm・pack・corpusのhash、出力、命令数、判定を記録した。96入力は自然文24件×3 schemaと、35・63・64・65・96・112・127・128 tokensの境界入力×3 schemaで構成する。互換性検査であり、正答率評価ではない。
+10%削減の目標には届かなかったが、採用条件の1%以上を満たした。96入力の命令数はすべて改善し、削減率の範囲は**8.303〜8.805%**、中央値は**8.709%**。実canister比較の全件データ（ローカル生成物: `artifacts/int8_optimization_v4/final-vs-baseline-canister.json`）に、入力・Wasm・pack・corpusのhash、出力、命令数、判定を記録した。96入力は自然文24件×3 schemaと、35・63・64・65・96・112・127・128 tokensの境界入力×3 schemaで構成する。互換性検査であり、正答率評価ではない。
 
 採用した変更は64行×16列タイルの整数積ループを2回展開したことと、attention QK直前の転置Kに対する不要な`contiguous()`コピーを除いたこと。64×16の選択は主要3形状すべてで勝ち、形状別分岐を増やす根拠はなかった。端数は既存の小タイル経路で処理する。
 
@@ -42,12 +42,12 @@
 
 attentionは個別に比較した。scale・mask・softmaxの連続処理は128-token代表入力で約0.316%改善したが、96入力の比較でlogits最大差0.647、判定2件不一致となり撤回した。QK専用SIMDは採用した通常QK経路より4.20%遅く、最大差0.110で撤回した。AV専用SIMDは16.36%遅く撤回した。`contiguous()`除去と元のsoftmaxの組合せが採用版である。候補の実測JSONとソースの退避は同じartifactディレクトリにある。
 
-診断器は現行の整数積とSIMD書戻し関数を使うよう更新した。[採用版の診断](../artifacts/int8_optimization_v4/final-components.json)では整数積が計測器入り行列積の98.65%、98.65%、99.44%を占める。計測器はコード生成を変えるため、この内訳を通常実行の厳密な内訳とはみなさない。通常実行の総命令数は別に保存した。
+診断器は現行の整数積とSIMD書戻し関数を使うよう更新した。採用版の診断（ローカル生成物: `artifacts/int8_optimization_v4/final-components.json`）では整数積が計測器入り行列積の98.65%、98.65%、99.44%を占める。計測器はコード生成を変えるため、この内訳を通常実行の厳密な内訳とはみなさない。通常実行の総命令数は別に保存した。
 
 ## 境界と再現
 
-- 最終Wasmをlocal canisterにinstallしてwarmupし、128-token分割推論を2 updateで完走した。[分割推論](../artifacts/int8_optimization_v4/final-batched-choice-128.json)と[再送・継続・非owner検査](../artifacts/int8_optimization_v4/final-protocol.json)を参照。
-- 反復したChoice入力の単一updateは28、96、112、118、120、124、127、**128 tokens**の全点で成功した。128 tokensは39,258,360,558命令。入力内容と全結果は[境界測定](../artifacts/int8_optimization_v4/final-update-limits.json)。任意の128-token入力の成功保証ではない。96入力中の127-token Scoreは39,264,165,979命令で単一update成功、128-token境界入力は分割実行で検証した。
+- 最終Wasmをlocal canisterにinstallしてwarmupし、128-token分割推論を2 updateで完走した。分割推論（ローカル生成物: `artifacts/int8_optimization_v4/final-batched-choice-128.json`）と再送・継続・非owner検査（ローカル生成物: `artifacts/int8_optimization_v4/final-protocol.json`）を参照。
+- 反復したChoice入力の単一updateは28、96、112、118、120、124、127、**128 tokens**の全点で成功した。128 tokensは39,258,360,558命令。入力内容と全結果は境界測定（ローカル生成物: `artifacts/int8_optimization_v4/final-update-limits.json`）。任意の128-token入力の成功保証ではない。96入力中の127-token Scoreは39,264,165,979命令で単一update成功、128-token境界入力は分割実行で検証した。
 - 旧Choice schemaで本文を1 tokenにした28-token入力は**8,494,909,941命令**で、[ICP公式のquery上限5B](https://docs.internetcomputer.org/references/resource-limits/)を超える。後続調査ではschemaを短くして15〜16-tokenのraw入力を作り、owner専用queryで成功した。[条件と品質上の制約](INT8_SHORT_QUERY.md)を参照。通常の`evaluate`はupdateのまま。
 - 整数積とF32書戻しのWasm参照テストは920・144・216例でPASS。63・64・65・127・128 tokens、端数列、最大積和、非有限値を含む。`cargo test -p laya-candle --tests`、`cargo test -p decision-engine --features candle`もPASS。
 
@@ -66,6 +66,6 @@ python3 tools/measure_update_limits.py --lengths 28,96,112,118,120,124,127,128 -
 
 ## 短入力query診断API追加後
 
-後続の短入力調査でowner専用`infer_tokens_query`を追加した。追加直後のWasm hashは`0x6914da6f6d286b659d292307a6fc250df69ad2c71e60a52466a16f09d9128a80`、サイズは5,893,463 bytes。元の96入力との[再比較](../artifacts/int8_optimization_v4/query-version-vs-baseline-canister.json)ではlogits最大絶対差0.0、判定96/96一致、全件の命令数が8.301%以上減った。warmupは33,913,236,889命令、観測メモリ最大957,033,623 bytes（[記録](../artifacts/int8_optimization_v4/short-query-warmup.json)）。旧Choice schemaの単一updateは28 tokensで8,493,557,400命令、128 tokensで39,258,249,055命令となり両方成功した（[記録](../artifacts/int8_optimization_v4/query-version-update-limits.json)）。
+後続の短入力調査でowner専用`infer_tokens_query`を追加した。追加直後のWasm hashは`0x6914da6f6d286b659d292307a6fc250df69ad2c71e60a52466a16f09d9128a80`、サイズは5,893,463 bytes。元の96入力との再比較（ローカル生成物: `artifacts/int8_optimization_v4/query-version-vs-baseline-canister.json`）ではlogits最大絶対差0.0、判定96/96一致、全件の命令数が8.301%以上減った。warmupは33,913,236,889命令、観測メモリ最大957,033,623 bytes（記録（ローカル生成物: `artifacts/int8_optimization_v4/short-query-warmup.json`））。旧Choice schemaの単一updateは28 tokensで8,493,557,400命令、128 tokensで39,258,249,055命令となり両方成功した（記録（ローカル生成物: `artifacts/int8_optimization_v4/query-version-update-limits.json`））。
 
-最終的にqueryへ**16-token上限と現行pack hash照合**を追加した。17 tokens以上は`TooLong`、別packは`BindingMismatch`で推論前に拒否する。Wasm hashは`0xdd7013df97f0b2b039540cb94888aebd7239efe085d53935601f6206236d1b49`、サイズは5,894,436 bytes。16-tokenの全18条件が実queryで成功し、最大4,756,310,000命令（[境界検証](../artifacts/int8_optimization_v4/query-guard-check.json)）。warmupは33,913,836,123命令、観測メモリ最大957,034,596 bytes（[記録](../artifacts/int8_optimization_v4/guarded-query-warmup.json)）。元の96入力は[再比較](../artifacts/int8_optimization_v4/guarded-query-vs-baseline-canister.json)でlogits最大差0.0、判定96/96一致、命令数も全件8.301%以上削減。従来の単一updateは28 tokensで8,494,991,111命令、128 tokensで39,248,061,951命令となり両方成功した（[記録](../artifacts/int8_optimization_v4/guarded-query-update-limits.json)）。queryの入力例と判断品質上の制約は[短入力メモ](INT8_SHORT_QUERY.md)を参照。
+最終的にqueryへ**16-token上限と現行pack hash照合**を追加した。17 tokens以上は`TooLong`、別packは`BindingMismatch`で推論前に拒否する。Wasm hashは`0xdd7013df97f0b2b039540cb94888aebd7239efe085d53935601f6206236d1b49`、サイズは5,894,436 bytes。16-tokenの全18条件が実queryで成功し、最大4,756,310,000命令（境界検証（ローカル生成物: `artifacts/int8_optimization_v4/query-guard-check.json`））。warmupは33,913,836,123命令、観測メモリ最大957,034,596 bytes（記録（ローカル生成物: `artifacts/int8_optimization_v4/guarded-query-warmup.json`））。元の96入力は再比較（ローカル生成物: `artifacts/int8_optimization_v4/guarded-query-vs-baseline-canister.json`）でlogits最大差0.0、判定96/96一致、命令数も全件8.301%以上削減。従来の単一updateは28 tokensで8,494,991,111命令、128 tokensで39,248,061,951命令となり両方成功した（記録（ローカル生成物: `artifacts/int8_optimization_v4/guarded-query-update-limits.json`））。queryの入力例と判断品質上の制約は[短入力メモ](INT8_SHORT_QUERY.md)を参照。

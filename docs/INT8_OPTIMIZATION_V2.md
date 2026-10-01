@@ -55,7 +55,7 @@ module hashは[実験記録](../artifacts/int8_optimization_v2/)に保存した�
 測定回数・負荷を統制した速度比較ではなく、mainnetのレイテンシを表す値でもない。
 モデルのアップロードとwarmupは上表に含まない。命令数はAPI内部の計測区間であり、
 Candid処理などの全メッセージ費用を網羅するものではない。
-[実測JSON](../artifacts/int8_optimization_v2/final-choice-128.json)。
+実測JSON（ローカル生成物: `artifacts/int8_optimization_v2/final-choice-128.json`）。
 
 `--stepped`は既定で16ステップずつ。`--steps-per-call 1`は開始＋1ステップずつの旧方式、
 `--profile`も1ステップずつ計測する。別モデルでは16ステップが40B以内とは限らないため、
@@ -68,13 +68,13 @@ Candid処理などの全メッセージ費用を網羅するものではない�
 CLIはIDを呼出し前に表示し、`--request-id HEX`で指定できる。
 後続バッチの再送保証は直前の開始位置・サイズに限るため、多数の小バッチへ分けた場合に
 CLI全体を最初から再実行して任意の過去ステップを再送できるわけではない。
-[再送・競合・権限の実機検証](../artifacts/int8_optimization_v2/final-protocol.json)。
+再送・競合・権限の実機検証（ローカル生成物: `artifacts/int8_optimization_v2/final-protocol.json`）。
 
 ## 全層プロファイルと残るボトルネック
 
 同じ128-token入力を1ステップずつ計測した比較でも、59.747B → 46.922B（21.5%削減）となった。
 これは計測用APIの値であり、上の通常2 update実行46.632Bとは分けて扱う。
-[区間比較JSON](../artifacts/int8_optimization_v2/profile-comparison.json)で入力・pack・logits一致と、
+区間比較JSON（ローカル生成物: `artifacts/int8_optimization_v2/profile-comparison.json`）で入力・pack・logits一致と、
 区間合計が全体命令数を超えないことを確認した。
 
 | 区間 | 従来4×4 | 今回 | 今回の全体比 |
@@ -104,7 +104,7 @@ Choiceは96、104〜109でも成功した。Noul/Scoreは108/109/110/112だけ�
 
 測定入力は自然文の品質評価用データではない。成功した長さだけから、すべての短い入力も
 成功するという保証は導けない。上限付近は40Bに対して余裕が小さく、128 tokensには分割を使う。
-[境界測定JSON](../artifacts/int8_optimization_v2/final-update-limits.json)には入力token列、
+境界測定JSON（ローカル生成物: `artifacts/int8_optimization_v2/final-update-limits.json`）には入力token列、
 成功命令数、失敗時のIC0522、module/pack hashを保存している。
 
 ## 再現と検証
@@ -124,7 +124,7 @@ IC_LAYA_CANDLE=1 qrun -- bash tools/build_one.sh decision-engine
 - `laya-candle`とCandle有効の`decision-engine`のnativeテスト、Candle無効のcheckが成功。
 - CLI/packのPythonテスト9件が成功。開始統合・後続バッチ・profile互換を含む。
 - 実モデルのChoice 38、Noul 45、Score 37 tokensは、それぞれ13.338B／15.881B／12.959B命令で
-  単一updateが成功。従来版と入力・pack・logitsが一致した（[比較記録](../artifacts/int8_optimization_v2/final-parity.json)）。
+  単一updateが成功。従来版と入力・pack・logitsが一致した（比較記録（ローカル生成物: `artifacts/int8_optimization_v2/final-parity.json`））。
 - 最終WasmのSHA-256は `f0046c2a40a5f43de3c17f0c259535761e3b3d7362f0848bfcd1cf959efdef9d`。
   ローカルに配置したmodule hashとの一致を確認した。
 

@@ -1,0 +1,256 @@
+{
+  "measured_at": "2026-09-30T08:42:50.248288+00:00",
+  "network": "local",
+  "canister": "4caro-hl777-77775-aaaba-cai",
+  "module_hash": "0x84d7dfd1ffcf72467cc6af309a80585ea658387e4f2772c8f2937114c409c5d5",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "tokenizer_sha256": "6c8aaa9a542084f2457eab775d4eeb51f92a70c0fd9de28d5edb0ddec3c08d30",
+  "native_binary_sha256": "e02ecff9d5890e8ac38829d32f4d5449a34594d39934794aeeb535a5617d0f18",
+  "query_cache_controlled": false,
+  "labeled_accuracy_measured": false,
+  "repeats": 3,
+  "completed": true,
+  "cases": [
+    {
+      "proposal_id": 617,
+      "source_url": "https://sns-api.internetcomputer.org/api/v1/snses/xjngq-yaaaa-aaaaq-aabha-cai/proposals/617",
+      "snapshot_sha256": "77a6059c276d591dc8f55e0fb6712d4ce370f26c9af4764a1c1656e7fd548566",
+      "triage": {
+        "proposal_id": "617",
+        "action_type": "ManageNervousSystemParameters",
+        "priority": "critical_review",
+        "extra_human_review_required": true,
+        "reasons": [
+          "minimum voting dissolve delay: 86400 to 1728000000 (20000x increase)",
+          "maximum dissolve delay: 2629800 to 2629800000 (1000x increase)"
+        ],
+        "measured_changes": [
+          {
+            "field": "neuron_minimum_dissolve_delay_to_vote_seconds",
+            "old": 86400,
+            "new": 1728000000,
+            "direction": "increase",
+            "change_factor": 20000.0
+          },
+          {
+            "field": "max_dissolve_delay_seconds",
+            "old": 2629800,
+            "new": 2629800000,
+            "direction": "increase",
+            "change_factor": 1000.0
+          },
+          {
+            "field": "neuron_minimum_stake_e8s",
+            "old": 1500000000000000,
+            "new": 1500000000000000,
+            "direction": "unchanged",
+            "change_factor": 1.0
+          }
+        ],
+        "policy": "experimental: >= 1000x change in selected governance parameters requires critical review; >= 10x and changes in other fields, token mints, and unknown actions require review; standard is not a safety certification"
+      },
+      "question": "Could this change reduce voter participation or concentrate voting power?",
+      "options": [
+        "unlikely",
+        "possible",
+        "likely"
+      ],
+      "state": "Minimum voting dissolve delay changes from 1 day to 20000 days, a 20000-fold increase.",
+      "input_tokens": 44,
+      "input_sha256": "0b39d5c075367615af171bb77370d9f46a7b7facc821aa4949591ae409cdf6fe",
+      "modes": {
+        "f32": {
+          "label": "unlikely",
+          "logits": [
+            0.6610286,
+            -1.0480639,
+            -0.8990531
+          ],
+          "query_calls": 5,
+          "median_instructions": 13445080788,
+          "max_query_handler_instructions": 2777681180,
+          "median_payload_bytes": 1278650,
+          "median_local_wall_seconds": 0.240424959018128
+        },
+        "int8": {
+          "label": "unlikely",
+          "logits": [
+            0.6348064,
+            -0.73048514,
+            -0.91491324
+          ],
+          "query_calls": 5,
+          "median_instructions": 15141614882,
+          "max_query_handler_instructions": 3116994777,
+          "median_payload_bytes": 208816,
+          "median_local_wall_seconds": 0.15686083299806342
+        }
+      },
+      "native": {
+        "logits": [
+          0.6432488560676575,
+          -0.8978308439254761,
+          -0.7405498623847961
+        ],
+        "label": "unlikely"
+      },
+      "f32_native_max_logit_difference": 0.1585032376152039
+    },
+    {
+      "proposal_id": 620,
+      "source_url": "https://sns-api.internetcomputer.org/api/v1/snses/xjngq-yaaaa-aaaaq-aabha-cai/proposals/620",
+      "snapshot_sha256": "5cbac0fbbe8843db416aaffb20cd00d80f2c1fc9d6a11eab94cbccb310ff18c7",
+      "triage": {
+        "proposal_id": "620",
+        "action_type": "ManageNervousSystemParameters",
+        "priority": "standard",
+        "extra_human_review_required": false,
+        "reasons": [],
+        "measured_changes": [
+          {
+            "field": "neuron_minimum_dissolve_delay_to_vote_seconds",
+            "old": 86400,
+            "new": 172800,
+            "direction": "increase",
+            "change_factor": 2.0
+          },
+          {
+            "field": "max_dissolve_delay_seconds",
+            "old": 2629800,
+            "new": 2629800,
+            "direction": "unchanged",
+            "change_factor": 1.0
+          },
+          {
+            "field": "neuron_minimum_stake_e8s",
+            "old": 1500000000000000,
+            "new": 1500000000000000,
+            "direction": "unchanged",
+            "change_factor": 1.0
+          }
+        ],
+        "policy": "experimental: >= 1000x change in selected governance parameters requires critical review; >= 10x and changes in other fields, token mints, and unknown actions require review; standard is not a safety certification"
+      },
+      "question": "Could this change reduce voter participation or concentrate voting power?",
+      "options": [
+        "unlikely",
+        "possible",
+        "likely"
+      ],
+      "state": "Minimum voting dissolve delay changes from 1 day to 2 days, a 2-fold increase.",
+      "input_tokens": 42,
+      "input_sha256": "7f28427df6bcaa759e3fd4e373a38102e4d37e636df6a2978bd1f7e72d84e4cb",
+      "modes": {
+        "f32": {
+          "label": "unlikely",
+          "logits": [
+            1.1716447,
+            -0.7403636,
+            -0.8057675
+          ],
+          "query_calls": 4,
+          "median_instructions": 12768944201,
+          "max_query_handler_instructions": 3933208868,
+          "median_payload_bytes": 911521,
+          "median_local_wall_seconds": 0.14956720898044296
+        },
+        "int8": {
+          "label": "unlikely",
+          "logits": [
+            0.9383628,
+            -0.7299843,
+            -0.89493996
+          ],
+          "query_calls": 4,
+          "median_instructions": 14338868195,
+          "max_query_handler_instructions": 3930300742,
+          "median_payload_bytes": 149689,
+          "median_local_wall_seconds": 0.1227341250050813
+        }
+      },
+      "native": {
+        "logits": [
+          1.0404268503189087,
+          -0.7499213218688965,
+          -0.7374588251113892
+        ],
+        "label": "unlikely"
+      },
+      "f32_native_max_logit_difference": 0.1312178496810914
+    },
+    {
+      "proposal_id": 653,
+      "source_url": "https://sns-api.internetcomputer.org/api/v1/snses/xjngq-yaaaa-aaaaq-aabha-cai/proposals/653",
+      "snapshot_sha256": "0dd326f9cb8e258645ba4683d843f0057a70ef8d43b83a1a8ba0c780e36496f7",
+      "triage": {
+        "proposal_id": "653",
+        "action_type": "MintSnsTokens",
+        "priority": "review",
+        "extra_human_review_required": true,
+        "reasons": [
+          "token mint: 250,000,000 tokens to one account; supply comparison unavailable"
+        ],
+        "measured_changes": [],
+        "policy": "experimental: >= 1000x change in selected governance parameters requires critical review; >= 10x and changes in other fields, token mints, and unknown actions require review; standard is not a safety certification"
+      },
+      "question": "Could this token mint concentrate token control?",
+      "options": [
+        "unlikely",
+        "possible",
+        "likely"
+      ],
+      "state": "This proposal mints 250,000,000 tokens to one account.",
+      "input_tokens": 35,
+      "input_sha256": "36a91194a51a27ef45f97964f47d159645404a9c059cb749c7305bb4c339170a",
+      "modes": {
+        "f32": {
+          "label": "likely",
+          "logits": [
+            -2.0040438,
+            1.0742419,
+            1.1504223
+          ],
+          "query_calls": 4,
+          "median_instructions": 10740856877,
+          "max_query_handler_instructions": 3305685697,
+          "median_payload_bytes": 757681,
+          "median_local_wall_seconds": 0.2176241670094896
+        },
+        "int8": {
+          "label": "likely",
+          "logits": [
+            -1.5215743,
+            0.8454772,
+            0.9778466
+          ],
+          "query_calls": 4,
+          "median_instructions": 11642078619,
+          "max_query_handler_instructions": 3188972707,
+          "median_payload_bytes": 126687,
+          "median_local_wall_seconds": 0.1904368340037763
+        }
+      },
+      "native": {
+        "logits": [
+          -1.9243849515914917,
+          0.9893530607223511,
+          1.1254804134368896
+        ],
+        "label": "likely"
+      },
+      "f32_native_max_logit_difference": 0.08488883927764901
+    }
+  ],
+  "source_sha256": {
+    "benchmark_boomdao_queries.py": "6a134520274bedaf693fcac4e747e4e94171e01d0830236d5548e6956e061c86",
+    "sns_proposal_triage.py": "d35f8642ee08274a058d0057f923cc9f84ce70569ed48cbe0708b4f177c711b5",
+    "check_practical_laya.py": "b62e6f8e13ac59fd6f82e32330f010720f1e4e48ab4fbe774c6b5d88955617d2",
+    "client_held_query.py": "af94e86a57982a99fe6a1835423f1e3ed2ccd4d5528f198529439a024d87c95a",
+    "query_transport.py": "e26b9a7b1d9e9db03b81fb92fc33c5540de3403e0431ba241da5074ed16b0142",
+    "canister_infer.py": "bf8c164eabcd42cd3aa2c16eeee8d4ddbc7ed15bc546dabb2b74426fac3e1bcd",
+    "measure_inference.py": "28959bf74907692a6cf50d303581ff693c64c532d6082e130e3a4f84ddbd93a1"
+  },
+  "scope": "Historical structured summaries, not full proposals; raw logits are supplementary. Query timings include CLI and uncontrolled cache. Payload excludes reply envelopes and final logits.",
+  "source_artifact": "benchmark.json",
+  "source_artifact_sha256": "49e30be910eee6a9957e5a7c91f06c2d21c66389a580c1f8363024a646dd8180"
+}

@@ -31,7 +31,7 @@ LayerNorm・GeLUまたはgateが入る。線形層同士を単純につなぐ箇
 1Mは100万命令。区間計測はタイルごとにcounterを呼ぶため、コンパイラが生成するコードと
 全体命令数が通常の行列積から変わる。**上表の比率は推定値**であり、通常実行の厳密な内訳とは扱わない。
 一方、各形状の出力checksumが通常の`benchmark_int8_kernel`と一致することを確認した。
-[scalar版証跡](../artifacts/int8_optimization_v2/f32-components-scalar.json)。
+scalar版証跡（ローカル生成物: `artifacts/int8_optimization_v2/f32-components-scalar.json`）。
 
 ## 採用した変更
 
@@ -47,27 +47,27 @@ attentionなど他のF32演算は変更していない。
 | `[1024,2624]` | 266.403M | 262.910M | 1.31% |
 
 表は量子化も含む`Int8Matrix::forward`全体で、3形状ともchecksumが完全一致。
-[SIMD版証跡](../artifacts/int8_optimization_v2/f32-components-simd.json)。
+SIMD版証跡（ローカル生成物: `artifacts/int8_optimization_v2/f32-components-simd.json`）。
 実モデルの2 updateは1回目24.857B→24.291B、2回目21.774B→21.287B、
 合計46.632B→45.578B（**追加2.26%削減**）。入力・pack SHA-256とlogitsも一致した。
-[実モデル証跡](../artifacts/int8_optimization_v2/final-f32-simd-128.json)。
+実モデル証跡（ローカル生成物: `artifacts/int8_optimization_v2/final-f32-simd-128.json`）。
 
 32ステップの層別計測でも全体46.922B→45.851Bとなり、`int8.matmul`区間は
 36.723B→35.667B。削減分のほぼ全てがこの区間にある。
-[区間比較](../artifacts/int8_optimization_v2/f32-writeback-profile-comparison.json)。
+区間比較（ローカル生成物: `artifacts/int8_optimization_v2/f32-writeback-profile-comparison.json`）。
 
 Choice入力の本文token数を変えた単一updateは109〜113 tokensで成功し、
 114〜128 tokensはすべて命令上限で失敗した。**最大成功実測は113 tokens**で
 39.988B命令、40Bまで約0.012Bしか残らない。この長さを一律の受付上限にはできない。
 Noul/Scoreや異なる文面での113-token成功は未検証。
-[境界測定](../artifacts/int8_optimization_v2/f32-writeback-update-limits.json)。
+境界測定（ローカル生成物: `artifacts/int8_optimization_v2/f32-writeback-update-limits.json`）。
 
 ## 検証と限界
 
 実Wasmで、従来の整数参照760ケース、量子化境界144ケースに加え、
 非2冪のscaleと小数入力を使ったF32書戻し216ケースをbit単位で照合した。
 Candle有効のnativeテスト、Candle無効のcheckと、2 updateの実モデル推論も成功した。
-[検証記録](../artifacts/int8_optimization_v2/f32-writeback-validation.json)。
+検証記録（ローカル生成物: `artifacts/int8_optimization_v2/f32-writeback-validation.json`）。
 
 ローカルcanisterの実行用cyclesが測定途中で凍結閾値に近づいたため、
 試験identityから同canisterへローカルcyclesを1T補充して未完了分を再開した。

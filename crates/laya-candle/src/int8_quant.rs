@@ -69,10 +69,9 @@ pub(super) fn row(input: &[f32], out: &mut [i8]) -> candle_core::Result<f32> {
                 f32x4_splat(-127.),
                 f32x4_min(signed, f32x4_splat(127.)),
             ));
-            out[i] = i32x4_extract_lane::<0>(q) as i8;
-            out[i + 1] = i32x4_extract_lane::<1>(q) as i8;
-            out[i + 2] = i32x4_extract_lane::<2>(q) as i8;
-            out[i + 3] = i32x4_extract_lane::<3>(q) as i8;
+            let packed=i8x16_narrow_i16x8(i16x8_narrow_i32x4(q,i32x4_splat(0)),i16x8_splat(0));
+            // Four output bytes, equal lengths checked; unaligned stores allowed.
+            unsafe {std::ptr::write_unaligned(out.as_mut_ptr().add(i).cast::<i32>(),i32x4_extract_lane::<0>(packed))};
         }
         for (q, v) in out[end..].iter_mut().zip(&input[end..]) {
             *q = (v / scale).round().clamp(-127., 127.) as i8;

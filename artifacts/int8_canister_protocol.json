@@ -1,8 +1,0 @@
-{
-  "retry_same_result": true,
-  "finished_step_rejected": true,
-  "stale_step_rejected": true,
-  "wrong_job_rejected": true,
-  "invalid_input_preserves_job": true,
-  "unauthorized_rejected": true
-}

@@ -4,6 +4,9 @@ use ic_laya_core::{engine::EngineState,schema,*,demo::{FixtureBackend,FixtureTok
 use serde::{Serialize,Deserialize};
 use std::cell::RefCell;
 
+#[cfg(feature="candle")]
+mod query_transport;
+
 /// Supplies the getrandom 0.3 backend that candle-core and tokenizers need on
 /// wasm32-unknown-unknown. Must stay in the canister (wasm link root) and
 /// unconditional, because `.cargo/config.toml` selects that backend for the whole
@@ -438,8 +441,296 @@ fn infer_tokens_query(input:TokenInput)->Result<TokenInference>{
     })?;
     infer_tokens_inner(input)
 }
+
+/// Independent queries return the entire continuation to the caller. No TokenJob is created.
+/// Instructions cover the handler, including continuation conversion, but exclude CDK decoding/encoding.
+#[derive(Debug,Clone,PartialEq,CandidType,Deserialize)]
+pub enum QueryInferenceProgress {
+    Continue { state:Vec<u8>, completed:u32, total:u32, instructions:u64 },
+    Done { logits:Vec<f32>, completed:u32, total:u32, instructions:u64 },
+}
+
+fn decode_query_begin(bytes:Vec<u8>)->TokenInput {
+    owner().unwrap_or_else(|_|ic_cdk::trap("Unauthorized"));
+    if bytes.len()>4096 {ic_cdk::trap("query input too large");}
+    let mut config=candid::de::DecoderConfig::new();
+    config.set_decoding_quota(20_000).set_skipping_quota(1000);
+    candid::decode_args_with_config::<(TokenInput,)>(&bytes,&config)
+        .unwrap_or_else(|_|ic_cdk::trap("invalid query input")).0
+}
+fn decode_query_begin_batch(bytes:Vec<u8>)->(TokenInput,u32) {
+    owner().unwrap_or_else(|_|ic_cdk::trap("Unauthorized"));
+    if bytes.len()>4096 {ic_cdk::trap("query input too large");}
+    let mut config=candid::de::DecoderConfig::new();
+    config.set_decoding_quota(20_000).set_skipping_quota(1000);
+    candid::decode_args_with_config(&bytes,&config)
+        .unwrap_or_else(|_|ic_cdk::trap("invalid batched query input"))
+}
+fn decode_query_continue(bytes:Vec<u8>)->(Vec<u8>,u32) {
+    owner().unwrap_or_else(|_|ic_cdk::trap("Unauthorized"));
+    // The largest supported architecture needs just over 1 MiB; allow a bounded Candid envelope.
+    if bytes.len()>1_100_000 {ic_cdk::trap("query continuation too large");}
+    let mut config=candid::de::DecoderConfig::new();
+    config.set_decoding_quota(4_000_000).set_skipping_quota(1000);
+    candid::decode_args_with_config(&bytes,&config)
+        .unwrap_or_else(|_|ic_cdk::trap("invalid query continuation"))
+}
+
+#[cfg(feature="candle")]
+fn check_query_pack(model:&laya_candle::LayaModel)->Result<()> {
+    if model.bundle!=QUERY_BENCHMARKED_BUNDLE {return Err(Error::BindingMismatch);}
+    Ok(())
+}
+
+#[cfg(feature="candle")]
+fn query_begin(model:&laya_candle::LayaModel,input:TokenInput,counter:impl Fn()->u64)->Result<QueryInferenceProgress> {
+    let start=counter();
+    let session=model.begin_inference(input)?;
+    let state=model.export_inference(&session)?;
+    Ok(QueryInferenceProgress::Continue{state,completed:0,total:model.inference_steps() as u32,instructions:counter().saturating_sub(start)})
+}
+
+#[cfg(feature="candle")]
+fn query_continue(model:&laya_candle::LayaModel,state:&[u8],max_steps:u32,counter:impl Fn()->u64)->Result<QueryInferenceProgress> {
+    if !(1..=16).contains(&max_steps) {return Err(Error::Invalid("query max_steps must be 1..=16".into()));}
+    let start=counter();
+    let mut session=model.import_inference(state)?;
+    let total=model.inference_steps() as u32;
+    for _ in 0..max_steps.min(total-session.completed_steps() as u32) {
+        if let Some(logits)=model.step_inference(&mut session)? {
+            return Ok(QueryInferenceProgress::Done{logits,completed:total,total,instructions:counter().saturating_sub(start)});
+        }
+    }
+    let completed=session.completed_steps() as u32;
+    let state=model.export_inference(&session)?;
+    Ok(QueryInferenceProgress::Continue{state,completed,total,instructions:counter().saturating_sub(start)})
+}
+
+/// Fixed-pack, owner-only raw inference; the continuation is not authenticated.
+// Custom CDK decoding otherwise exports a blob-only Candid signature. Register
+// the actual typed contract explicitly while keeping the bounded decoder.
+#[ic_cdk::query(hidden=true,decode_with="decode_query_begin")]
+#[candid::candid_method(query)]
+fn begin_token_inference_query(input:TokenInput)->Result<QueryInferenceProgress> {
+    owner()?;
+    #[cfg(feature="candle")]
+    {MODEL.with(|m|{
+        let m=m.borrow();let model=m.as_ref().ok_or_else(||Error::ModelUnavailable("model is cold".into()))?;
+        check_query_pack(model)?;
+        query_begin(model,input,ic_cdk::api::instruction_counter)
+    })}
+    #[cfg(not(feature="candle"))]
+    {let _=input;Err(Error::ModelUnavailable("Candle feature disabled".into()))}
+}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_continue")]
+#[candid::candid_method(query)]
+fn continue_token_inference_query(state:Vec<u8>,max_steps:u32)->Result<QueryInferenceProgress> {
+    owner()?;
+    #[cfg(feature="candle")]
+    {MODEL.with(|m|{
+        let m=m.borrow();let model=m.as_ref().ok_or_else(||Error::ModelUnavailable("model is cold".into()))?;
+        check_query_pack(model)?;
+        query_continue(model,&state,max_steps,ic_cdk::api::instruction_counter)
+    })}
+    #[cfg(not(feature="candle"))]
+    {let _=(state,max_steps);Err(Error::ModelUnavailable("Candle feature disabled".into()))}
+}
+/// Experimental activation-INT8 engine; numerical parity is not assumed.
+#[cfg(feature="candle")]
+fn query_begin_int8(model:&laya_candle::LayaModel,input:TokenInput,counter:impl Fn()->u64)->Result<QueryInferenceProgress> {
+    let start=counter();
+    let session=model.begin_quantized(input)?;
+    let state=model.export_quantized(&session)?;
+    Ok(QueryInferenceProgress::Continue{state,completed:0,total:model.inference_steps() as u32,instructions:counter().saturating_sub(start)})
+}
+
+#[cfg(feature="candle")]
+fn query_continue_int8(model:&laya_candle::LayaModel,state:&[u8],max_steps:u32,counter:impl Fn()->u64)->Result<QueryInferenceProgress> {
+    if !(1..=16).contains(&max_steps){return Err(Error::Invalid("query max_steps must be 1..=16".into()));}
+    let start=counter();let mut session=model.import_quantized(state)?;let total=model.inference_steps() as u32;
+    for _ in 0..max_steps.min(total-session.completed_steps() as u32){
+        if let Some(logits)=model.step_quantized(&mut session)?{
+            return Ok(QueryInferenceProgress::Done{logits,completed:total,total,instructions:counter().saturating_sub(start)});
+        }
+    }
+    let completed=session.completed_steps() as u32;let state=model.export_quantized(&session)?;
+    Ok(QueryInferenceProgress::Continue{state,completed,total,instructions:counter().saturating_sub(start)})
+}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_begin")]
+#[candid::candid_method(query)]
+fn begin_token_inference_int8_query(input:TokenInput)->Result<QueryInferenceProgress>{
+    owner()?;
+    #[cfg(feature="candle")]
+    {MODEL.with(|m|{
+        let m=m.borrow();let model=m.as_ref().ok_or_else(||Error::ModelUnavailable("model is cold".into()))?;
+        check_query_pack(model)?;query_begin_int8(model,input,ic_cdk::api::instruction_counter)
+    })}
+    #[cfg(not(feature="candle"))]
+    {let _=input;Err(Error::ModelUnavailable("Candle feature disabled".into()))}
+}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_continue")]
+#[candid::candid_method(query)]
+fn continue_token_inference_int8_query(state:Vec<u8>,max_steps:u32)->Result<QueryInferenceProgress>{
+    owner()?;
+    #[cfg(feature="candle")]
+    {MODEL.with(|m|{
+        let m=m.borrow();let model=m.as_ref().ok_or_else(||Error::ModelUnavailable("model is cold".into()))?;
+        check_query_pack(model)?;query_continue_int8(model,&state,max_steps,ic_cdk::api::instruction_counter)
+    })}
+    #[cfg(not(feature="candle"))]
+    {let _=(state,max_steps);Err(Error::ModelUnavailable("Candle feature disabled".into()))}
+}
+#[derive(CandidType,Deserialize)]
+pub struct ProfiledQuery { pub progress:QueryInferenceProgress,pub costs:Vec<ProfileCost> }
+
+#[cfg(feature="candle")]
+fn query_begin_batch(model:&laya_candle::LayaModel,input:TokenInput,max_steps:u32,int8:bool,counter:impl Fn()->u64)->Result<QueryInferenceProgress> {
+    if !(1..=16).contains(&max_steps){return Err(Error::Invalid("query max_steps must be 1..=16".into()));}
+    let start=counter();let total=model.inference_steps() as u32;
+    let (state,completed)=if int8 {
+        let mut session=model.begin_quantized(input)?;
+        for _ in 0..max_steps.min(total){
+            if let Some(logits)=model.step_quantized(&mut session)?{
+                return Ok(QueryInferenceProgress::Done{logits,completed:total,total,instructions:counter().saturating_sub(start)});
+            }
+        }
+        (model.export_quantized(&session)?,session.completed_steps() as u32)
+    } else {
+        let mut session=model.begin_inference(input)?;
+        for _ in 0..max_steps.min(total){
+            if let Some(logits)=model.step_inference(&mut session)?{
+                return Ok(QueryInferenceProgress::Done{logits,completed:total,total,instructions:counter().saturating_sub(start)});
+            }
+        }
+        (model.export_inference(&session)?,session.completed_steps() as u32)
+    };
+    Ok(QueryInferenceProgress::Continue{state,completed,total,instructions:counter().saturating_sub(start)})
+}
+
+#[cfg(feature="candle")]
+fn transported_query(model:&laya_candle::LayaModel,input:Option<TokenInput>,wire:&[u8],max_steps:u32,int8:bool,counter:impl Fn()->u64)->Result<QueryInferenceProgress> {
+    let start=counter();
+    let progress=if let Some(input)=input {
+        if max_steps>0 {query_begin_batch(model,input,max_steps,int8,||0)?}
+        else if int8 {query_begin_int8(model,input,||0)?} else {query_begin(model,input,||0)?}
+    } else {
+        let raw=query_transport::unpack(wire)?;
+        if int8 {query_continue_int8(model,&raw,max_steps,||0)?} else {query_continue(model,&raw,max_steps,||0)?}
+    };
+    Ok(match progress {
+        QueryInferenceProgress::Continue{state,completed,total,..}=>{
+            let state=query_transport::pack(state)?;
+            QueryInferenceProgress::Continue{state,completed,total,instructions:counter().saturating_sub(start)}
+        },
+        QueryInferenceProgress::Done{logits,completed,total,..}=>QueryInferenceProgress::Done{logits,completed,total,instructions:counter().saturating_sub(start)},
+    })
+}
+
+fn transported_call(input:Option<TokenInput>,wire:&[u8],max_steps:u32,int8:bool)->Result<QueryInferenceProgress> {
+    owner()?;
+    #[cfg(feature="candle")]
+    {MODEL.with(|m|{
+        let m=m.borrow();let model=m.as_ref().ok_or_else(||Error::ModelUnavailable("model is cold".into()))?;
+        check_query_pack(model)?;
+        transported_query(model,input,wire,max_steps,int8,ic_cdk::api::instruction_counter)
+    })}
+    #[cfg(not(feature="candle"))]
+    {let _=(input,wire,max_steps,int8);Err(Error::ModelUnavailable("Candle feature disabled".into()))}
+}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_begin")]
+#[candid::candid_method(query)]
+fn begin_token_inference_compressed_query(input:TokenInput)->Result<QueryInferenceProgress>{transported_call(Some(input),&[],0,false)}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_continue")]
+#[candid::candid_method(query)]
+fn continue_token_inference_compressed_query(state:Vec<u8>,max_steps:u32)->Result<QueryInferenceProgress>{transported_call(None,&state,max_steps,false)}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_begin")]
+#[candid::candid_method(query)]
+fn begin_token_inference_int8_compressed_query(input:TokenInput)->Result<QueryInferenceProgress>{transported_call(Some(input),&[],0,true)}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_continue")]
+#[candid::candid_method(query)]
+fn continue_token_inference_int8_compressed_query(state:Vec<u8>,max_steps:u32)->Result<QueryInferenceProgress>{transported_call(None,&state,max_steps,true)}
+
+fn begin_batch_call(input:TokenInput,max_steps:u32,int8:bool,compressed:bool)->Result<QueryInferenceProgress> {
+    owner()?;
+    if !(1..=16).contains(&max_steps){return Err(Error::Invalid("query max_steps must be 1..=16".into()));}
+    #[cfg(feature="candle")]
+    {MODEL.with(|m|{
+        let m=m.borrow();let model=m.as_ref().ok_or_else(||Error::ModelUnavailable("model is cold".into()))?;
+        check_query_pack(model)?;
+        if compressed {transported_query(model,Some(input),&[],max_steps,int8,ic_cdk::api::instruction_counter)}
+        else {query_begin_batch(model,input,max_steps,int8,ic_cdk::api::instruction_counter)}
+    })}
+    #[cfg(not(feature="candle"))]
+    {let _=(input,max_steps,int8,compressed);Err(Error::ModelUnavailable("Candle feature disabled".into()))}
+}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_begin_batch")]
+#[candid::candid_method(query)]
+fn begin_token_inference_batch_query(input:TokenInput,max_steps:u32)->Result<QueryInferenceProgress>{begin_batch_call(input,max_steps,false,false)}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_begin_batch")]
+#[candid::candid_method(query)]
+fn begin_token_inference_int8_batch_query(input:TokenInput,max_steps:u32)->Result<QueryInferenceProgress>{begin_batch_call(input,max_steps,true,false)}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_begin_batch")]
+#[candid::candid_method(query)]
+fn begin_token_inference_batch_compressed_query(input:TokenInput,max_steps:u32)->Result<QueryInferenceProgress>{begin_batch_call(input,max_steps,false,true)}
+
+#[ic_cdk::query(hidden=true,decode_with="decode_query_begin_batch")]
+#[candid::candid_method(query)]
+fn begin_token_inference_int8_batch_compressed_query(input:TokenInput,max_steps:u32)->Result<QueryInferenceProgress>{begin_batch_call(input,max_steps,true,true)}
+
+/// Owner-only bounded query diagnostic; performs no persistent job writes.
+#[ic_cdk::query(hidden=true,decode_with="decode_query_continue")]
+#[candid::candid_method(query)]
+fn profile_token_inference_int8_query(state:Vec<u8>,max_steps:u32)->Result<ProfiledQuery>{
+    owner()?;
+    #[cfg(feature="candle")]
+    {MODEL.with(|m|{
+        let m=m.borrow();let model=m.as_ref().ok_or_else(||Error::ModelUnavailable("model is cold".into()))?;
+        check_query_pack(model)?;
+        let (progress,costs)=laya_candle::profile::capture(ic_cdk::api::instruction_counter,||query_continue_int8(model,&state,max_steps,ic_cdk::api::instruction_counter));
+        Ok(ProfiledQuery{progress:progress?,costs:costs.into_iter().map(|c|ProfileCost{name:c.name,shape:c.shape.into_iter().map(|v|v as u64).collect(),instructions:c.instructions}).collect()})
+    })}
+    #[cfg(not(feature="candle"))]
+    {let _=(state,max_steps);Err(Error::ModelUnavailable("Candle feature disabled".into()))}
+}
+#[derive(CandidType)]
+pub struct EpilogueVariant { pub name:String,pub instructions:u64,pub checksum:Digest,pub clamped:u64,pub rmse:f64,pub max_abs_error:f32,pub different_from_fixed_float:u64 }
+#[derive(CandidType)]
+pub struct EpilogueBenchmark { pub prepare_instructions:u64,pub variants:Vec<EpilogueVariant> }
+fn decode_epilogue_benchmark(bytes:Vec<u8>)->Vec<u8>{
+    owner().unwrap_or_else(|_|ic_cdk::trap("Unauthorized"));
+    if bytes.len()>2_800_000 {ic_cdk::trap("epilogue benchmark input too large");}
+    let mut config=candid::de::DecoderConfig::new();config.set_decoding_quota(9_000_000).set_skipping_quota(1000);
+    candid::decode_args_with_config::<(Vec<u8>,)>(&bytes,&config).unwrap_or_else(|_|ic_cdk::trap("invalid epilogue benchmark input")).0
+}
+/// Bounded diagnostic on supplied real accumulation data. Calibration is not
+/// installed into MODEL, nor used by Receipt inference.
+#[ic_cdk::query(decode_with="decode_epilogue_benchmark")]
+fn benchmark_q8_epilogue(input:Vec<u8>)->Result<EpilogueBenchmark>{
+    owner()?;
+    #[cfg(feature="candle")]
+    {
+        let input=laya_candle::epilogue::Input::decode(&input).map_err(|e|Error::Invalid(e.to_string()))?;
+        let report=laya_candle::epilogue::benchmark(&input,ic_cdk::api::instruction_counter).map_err(|_|Error::Numeric)?;
+        Ok(EpilogueBenchmark{prepare_instructions:report.prepare_instructions,variants:report.variants.into_iter().map(|v|EpilogueVariant{name:v.name,instructions:v.instructions,checksum:v.checksum,clamped:v.clamped,rmse:v.rmse,max_abs_error:v.max_abs_error,different_from_fixed_float:v.different_from_fixed_float}).collect()})
+    }
+    #[cfg(not(feature="candle"))]
+    {let _=input;Err(Error::ModelUnavailable("Candle feature disabled".into()))}
+}
 ic_cdk::export_candid!();
 pub fn candid_interface()->String{__export_service()}
+
+#[cfg(all(test,feature="candle"))]
+mod client_query_tests;
 
 #[cfg(all(test,feature="candle"))]
 mod tests {

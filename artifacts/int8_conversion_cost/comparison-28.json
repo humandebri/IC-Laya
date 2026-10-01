@@ -1,0 +1,50 @@
+{
+  "tokens": 28,
+  "baseline_module_hash": "0x4c3dd516ce2215d5130fbf9b41751e026a2db7ed2f68f3014f6a147be710c038",
+  "candidate_module_hash": "0xbf0ce7bbbb0afe896ed03ebb0d546407635858a6f8e54ae0a8174387ec7d24aa",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "input_sha256": "cf562962d0a609914095776577f977ed952f674d77d6c0d5314575135fdfea3c",
+  "logits_equal": true,
+  "baseline_instructions": 8639458280,
+  "candidate_instructions": 8602787488,
+  "reduction_percent": 0.42445707602861704,
+  "baseline_costs": {
+    "int8.input": 27225998,
+    "int8.quantize": 171358430,
+    "int8.matmul": 7329877164,
+    "int8.tensor": 220744,
+    "attention.rope": 158136024,
+    "attention.qk": 89755728,
+    "attention.softmax": 90520132,
+    "attention.av": 104325764,
+    "norm": 198611278,
+    "mlp.gelu_gate": 349817852
+  },
+  "candidate_costs": {
+    "int8.input": 57340,
+    "int8.quantize": 171217992,
+    "int8.matmul": 7330153079,
+    "int8.tensor": 201018,
+    "attention.rope": 159914598,
+    "attention.qk": 89254437,
+    "attention.softmax": 90642651,
+    "attention.av": 102643799,
+    "norm": 193672932,
+    "mlp.gelu_gate": 349898631
+  },
+  "baseline_percent": {
+    "int8.input": 0.3151354762951642,
+    "int8.quantize": 1.9834395218585394,
+    "int8.matmul": 84.84186075611213,
+    "int8.tensor": 0.0025550676077806117,
+    "attention.rope": 1.8303928194905295,
+    "attention.qk": 1.0389045827998373,
+    "attention.softmax": 1.0477524060686823,
+    "attention.av": 1.2075498326267744,
+    "norm": 2.2988857815284223,
+    "mlp.gelu_gate": 4.049071604521945
+  },
+  "linear_calls": 122,
+  "avoided_f32_input_copy_bytes": 18878464,
+  "largest_avoided_f32_input_copy_bytes": 458752
+}

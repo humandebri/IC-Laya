@@ -1,0 +1,39 @@
+{
+  "module_hash": "0x1abfbec7c96856f86bd8bbf86f891d4a480716c3a96fa6c9b1f3491630becc50",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "complete": true,
+  "cases": 96,
+  "decision_agreements": 88,
+  "decision_disagreements": [
+    "choice-natural-03",
+    "choice-natural-11",
+    "choice-natural-23",
+    "choice-boundary-35",
+    "choice-boundary-96",
+    "score-natural-07",
+    "score-boundary-96",
+    "score-boundary-112"
+  ],
+  "f32_live_vs_bound_canister_max_abs_error": 0.0,
+  "q8_fused_vs_prior_max_abs_error": 0.0,
+  "worst_f32_vs_q8_abs_error": 3.1853323,
+  "median_f32_vs_q8_abs_error": 0.27936375000000024,
+  "median_instructions": {
+    "f32": 39544344114,
+    "int8": 47209698416
+  },
+  "prior_int8_instructions": 47373198979,
+  "fusion_instruction_reduction_percent": 0.3451330425721877,
+  "int8_instruction_increase_vs_f32_percent": 19.38419886267937,
+  "communication_bytes": {
+    "f32": 16796736,
+    "int8": 4230208
+  },
+  "communication_reduction_percent": 74.81529744826614,
+  "max_query_handler_instructions": 3446430957,
+  "query_cache_controlled": false,
+  "labeled_accuracy_measured": false,
+  "fixed_scale_enabled_in_model": false,
+  "q31_enabled_in_model": false,
+  "analysis_module_hash": "0x7f82edaf3ca92b86d186f89a842eb3a314a7979de9af7f814f972c955c479c05"
+}

@@ -1,9 +1,11 @@
 # Build and local canister state
-/target/
+target/
 /build/
-/.dfx/
-/.icp/
-/.icphome/
+.dfx/
+.icp/
+.icphome/
+*.wasm
+*.wasm.gz
 
 # Secrets and local settings
 *.pem
@@ -14,6 +16,8 @@
 !.env.sample
 !.env.template
 !.env.*.example
+!.env.*.sample
+!.env.*.template
 
 # Downloaded models and generated performance fixtures
 /checkpoints/
@@ -32,9 +36,49 @@ __pycache__/
 .coverage
 .coverage.*
 /htmlcov/
+*.egg-info/
 
-# Raw logs are disposable; benchmark JSON is reviewable evidence
-/artifacts/**/*.log
+# Generated artifacts are local by default. Only curated inputs, references,
+# final summaries and explanatory Markdown are versioned.
+/artifacts/**
+!/artifacts/**/
+!/artifacts/*.md
+!/artifacts/laya-*-input.json
+!/artifacts/laya_int8_parity.json
+!/artifacts/synthetic_neural_checks.json
+!/artifacts/int8_batched_choice-128.json
+!/artifacts/int8_optimization_v4/validation-corpus.json
+!/artifacts/int8_optimization_v4/baseline-canister-corpus.json
+!/artifacts/int8_optimization_v4/baseline-corpus-logits.json
+!/artifacts/int8_optimization_v4/short-inputs.json
+!/artifacts/int8_optimization_v4/query-limit-grid.json
+!/artifacts/references/*.json
+!/artifacts/boomdao_query_benchmark/summary.json
+!/artifacts/int8_activations/summary.json
+!/artifacts/int8_conversion_cost/comparison-28.json
+!/artifacts/int8_conversion_cost/comparison-128.json
+!/artifacts/int8_fusion/summary.json
+!/artifacts/int8_search/summary.json
+!/artifacts/query_begin_fusion/summary.json
+!/artifacts/query_conditions/summary.json
+!/artifacts/query_transport/summary.json
+
+# Raw logs and temporary outputs stay ignored, including under artifacts/.
+*.log
+/artifacts/local/
+/artifacts/tmp/
+/artifacts/.cache/
+/artifacts/**/*.bin
+/artifacts/**/*.npy
+/artifacts/**/*.npz
+/artifacts/**/*.safetensors
+# Do not ignore *.bin globally: fixtures/tiny-*/model.bin is test input.
+
+# Temporary files from interrupted commands and atomic writes
+*.tmp
+*.temp
+*.partial
+*.bak
 
 # OS and editor files
 .DS_Store

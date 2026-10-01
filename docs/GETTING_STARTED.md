@@ -127,4 +127,4 @@ This stops the network for the current project. Model files, identity, and local
 
 ## Validation record
 
-The [setup validation record](../artifacts/oss_setup_validation.json) records a fresh managed checkout, Python environment, model export, Wasm build, and fresh local canister run. Both 45-token and 128-token inputs completed in two updates. The fixed-revision checkpoint was reused from a local copy; the full weight download was not repeated. Its URL returned HTTP 200, and configuration and tokenizer files were fetched again. This verifies the setup path, not decision accuracy.
+The setup validation record（ローカル生成物: `artifacts/oss_setup_validation.json`） records a fresh managed checkout, Python environment, model export, Wasm build, and fresh local canister run. Both 45-token and 128-token inputs completed in two updates. The fixed-revision checkpoint was reused from a local copy; the full weight download was not repeated. Its URL returned HTTP 200, and configuration and tokenizer files were fetched again. This verifies the setup path, not decision accuracy.

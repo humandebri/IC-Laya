@@ -1,0 +1,72 @@
+{
+  "module_hash": "0x6a73e1ebc2d9b3084b68c64cab9c43c995361701b5e991aa99009410b756df2a",
+  "bundle_sha256": "bb70b3f0f2806bef5d4b670f44bb606892067fc0ebd928bd682b98ebdb2dc092",
+  "measured_at": "2026-09-30T07:12:51.674103+00:00",
+  "network": "local",
+  "cases": 100,
+  "corpus_cases": 96,
+  "formats": [
+    "f32",
+    "int8"
+  ],
+  "new_logit_changes": 0,
+  "labeled_accuracy_measured": false,
+  "f32_int8_decision_changes": [
+    "choice-natural-03",
+    "score-boundary-112",
+    "choice-natural-11",
+    "choice-natural-23",
+    "choice-boundary-35",
+    "choice-boundary-96",
+    "score-natural-07",
+    "score-boundary-96"
+  ],
+  "query_cache_controlled": false,
+  "failed_auto_query_attempts": 0,
+  "max_observed_query_handler_instructions": 4753778888,
+  "compression_implemented": true,
+  "codec": "zlib fast; F32 byte shuffle; lossless",
+  "pilot_128": {
+    "f32": {
+      "query_calls": 11,
+      "payload_bytes": 8386314,
+      "baseline_payload_bytes": 16796736,
+      "payload_reduction_percent": 50.07176394270887,
+      "handler_instructions": 41817971224,
+      "codec_overhead_instructions": 2547706552,
+      "codec_overhead_percent": 6.487622564501172,
+      "max_handler_instructions": 4311213032
+    },
+    "int8": {
+      "query_calls": 11,
+      "payload_bytes": 1383150,
+      "baseline_payload_bytes": 4230208,
+      "payload_reduction_percent": 67.303026234171,
+      "handler_instructions": 42585022903,
+      "codec_overhead_instructions": 481546178,
+      "codec_overhead_percent": 1.1437206982815917,
+      "max_handler_instructions": 4390780587
+    }
+  },
+  "source_sha256": {
+    "Cargo.lock": "fd46e4240121cf8a7050394bcb796f7cb28d974364b9d3267f8b7b6526f46b32",
+    "canisters/decision-engine/Cargo.toml": "4c003586fb311c6564eafb28641fc8909080c692601b72b87440f83cf5b947cb",
+    "canisters/decision-engine/src/lib.rs": "dc4c6efae6d107ed322d1b532d6bb50d4b6325a46b49ac2071d32b8d7c23faf4",
+    "canisters/decision-engine/src/query_transport.rs": "5a573a1e90f03ea6b24c36df7fd0f6ec1f46e875d06d760b17ce44f7e9b8e985",
+    "tools/query_transport.py": "10e5a1d91247f019b7426d336268e5e90d561c2a632f0d25d79689ce83f50e6b",
+    "tools/client_held_query.py": "ce060548d6ead78c2f9f6bf8523ffeb13caa49ea3e198cdf1de9c61a9bc4ef25",
+    "tools/canister_infer.py": "bf8c164eabcd42cd3aa2c16eeee8d4ddbc7ed15bc546dabb2b74426fac3e1bcd",
+    "tools/validate_query_transport.py": "249a43de3ea79bfec75873816ee570f74c8cc38b69223d2b3bec7727d1901321",
+    "tools/check_query_transport_protocol.py": "efb36e3b94d4bb52b9866dc7d39d82a92ac39c7c544241cbbbf38cf11257be76"
+  },
+  "checks": {
+    "python_tests": 80,
+    "candle_canister_tests": 8,
+    "default_workspace_tests_passed": true,
+    "wasm_built": true,
+    "live_protocol_passed": true,
+    "cli_default_passed": true,
+    "codec_boundary_bits_exact": true,
+    "update_job_unchanged": true
+  }
+}

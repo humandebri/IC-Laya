@@ -220,3 +220,102 @@ pub extern "C" fn check_writeback() -> u32 {
     }
     cases
 }
+
+// Compile the exact shared SIMD source under the Wasm target, including tails.
+#[path = "../src/q8_ops.rs"]
+mod q8_ops;
+#[no_mangle]
+pub extern "C" fn check_q8_ops() -> u32 {
+    let mut cases = 0;
+    for width in [2, 4, 6, 8, 10, 16, 32, 64, 128] {
+        for scale in [0., 0.0031, 0.25, 1e-20] {
+            for pattern in 0..4 {
+                let src: Vec<i8> = (0..width)
+                    .map(|i| match pattern {
+                        0 => -128,
+                        1 => 127,
+                        2 => ((i * 37 + 11) % 256) as u8 as i8,
+                        _ => 0,
+                    })
+                    .collect();
+                let dots: Vec<i32> = (0..width)
+                    .map(|i| {
+                        if i % 2 == 0 {
+                            i32::MIN + i as i32
+                        } else {
+                            i32::MAX - i as i32
+                        }
+                    })
+                    .collect();
+                let rotations: Vec<[f32; 2]> = (0..width / 2)
+                    .map(|i| {
+                        let (sin, cos) = (i as f64 * 0.317).sin_cos();
+                        [sin as f32, cos as f32]
+                    })
+                    .collect();
+                let mut out = vec![0.; width];
+                let (sum, squares) = q8_ops::statistics(&src);
+                let expected_sum: i64 = src.iter().map(|&v| v as i64).sum();
+                let expected_squares: i64 = src.iter().map(|&v| (v as i64) * (v as i64)).sum();
+                assert_eq!((sum, squares), (expected_sum, expected_squares));
+                let mean = sum as f64 / width as f64;
+                let inv = 0.31743;
+                let weight: Vec<f32> = (0..width).map(|i| (i as f32 - 3.) * 0.019).collect();
+                let bias: Vec<f32> = (0..width).map(|i| (i as f32 - 5.) * 0.0011).collect();
+                for b in [None, Some(bias.as_slice())] {
+                    q8_ops::normalize_affine(&src, mean, inv, &weight, b, &mut out);
+                    for i in 0..width {
+                        let value = (((src[i] as f64 - mean) * inv) as f32) * weight[i]
+                            + b.map_or(0., |b| b[i]);
+                        assert_eq!(out[i].to_bits(), value.to_bits());
+                    }
+                }
+                q8_ops::dequantize(&src, scale, &mut out);
+                for i in 0..width {
+                    assert_eq!(out[i].to_bits(), (src[i] as f32 * scale).to_bits());
+                }
+                q8_ops::scale_i32(&dots, scale, &mut out);
+                for i in 0..width {
+                    assert_eq!(out[i].to_bits(), (dots[i] as f32 * scale).to_bits());
+                }
+                q8_ops::rotary(&src, scale, &rotations, &mut out);
+                for i in 0..width {
+                    let half = width / 2;
+                    let [sin, cos] = rotations[i % half];
+                    let a = src[i] as f32 * scale;
+                    let b = src[if i < half { i + half } else { i - half }] as f32 * scale;
+                    let value = if i < half {
+                        a * cos - b * sin
+                    } else {
+                        a * cos + b * sin
+                    };
+                    assert_eq!(out[i].to_bits(), value.to_bits());
+                }
+                cases += 1;
+            }
+        }
+    }
+    cases
+}
+
+#[no_mangle]
+pub extern "C" fn check_q8_statistics() -> u32 {
+    let mut count = 0;
+    for width in [1, 15, 16, 17, 1024, 16384] {
+        for pattern in 0..4 {
+            let src: Vec<i8> = (0..width)
+                .map(|i| match pattern {
+                    0 => -128,
+                    1 => 127,
+                    2 => ((i * 19 + 3) % 256) as u8 as i8,
+                    _ => 0,
+                })
+                .collect();
+            let a: i64 = src.iter().map(|&v| v as i64).sum();
+            let b: i64 = src.iter().map(|&v| (v as i64) * (v as i64)).sum();
+            assert_eq!(q8_ops::statistics(&src), (a, b));
+            count += 1;
+        }
+    }
+    count
+}
